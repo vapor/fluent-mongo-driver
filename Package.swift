@@ -4,26 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "FluentMongo",
+    name: "fluent-mongo-driver",
+    platforms: [
+       .macOS(.v10_14)
+    ],
     products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
-            name: "FluentMongo",
-            targets: ["FluentMongo"]),
+            name: "FluentMongoDriver",
+            targets: ["FluentMongoDriver"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", .branch("tn-field-key")),
         .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
-            name: "FluentMongo",
+            name: "FluentMongoDriver",
             dependencies: ["FluentKit", "MongoKitten"]),
         .testTarget(
-            name: "FluentMongoTests",
-            dependencies: ["FluentMongo"]),
+            name: "FluentMongoDriverTests",
+            dependencies: ["FluentMongoDriver", "FluentBenchmark"]),
     ]
 )
