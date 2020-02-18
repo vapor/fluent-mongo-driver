@@ -49,9 +49,9 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testMigratorError()
     }
 
-//    func testJoin() throws {
-//        try self.benchmarker.testJoin()
-//    }
+    func testJoin() throws {
+        try self.benchmarker.testJoin()
+    }
 
     func testBatchCreate() throws {
         try self.benchmarker.testBatchCreate()
@@ -113,14 +113,13 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testNewModelDecode()
     }
 
-// FIXME: This does a join
-//    func testSiblingsAttach() throws {
-//        try self.benchmarker.testSiblingsAttach()
-//    }
+    func testSiblingsAttach() throws {
+        try self.benchmarker.testSiblingsAttach()
+    }
 
-//    func testSiblingsEagerLoad() throws {
-//        try self.benchmarker.testSiblingsEagerLoad()
-//    }
+    func testSiblingsEagerLoad() throws {
+        try self.benchmarker.testSiblingsEagerLoad()
+    }
 
     func testParentGet() throws {
         try self.benchmarker.testParentGet()
@@ -130,23 +129,21 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testParentSerialization()
     }
 
-    // FIXME: This does a join
-//    func testMultipleJoinSameTable() throws {
-//        try self.benchmarker.testMultipleJoinSameTable()
-//    }
+    func testMultipleJoinSameTable() throws {
+        try self.benchmarker.testMultipleJoinSameTable()
+    }
 
     func testOptionalParent() throws {
         try self.benchmarker.testOptionalParent()
     }
 
-// TODO: Field filters require an aggregate, which is not simple
-//    func testFieldFilter() throws {
-//        try self.benchmarker.testFieldFilter()
-//    }
-//
-//    func testJoinedFieldFilter() throws {
-//        try self.benchmarker.testJoinedFieldFilter()
-//    }
+    func testFieldFilter() throws {
+        try self.benchmarker.testFieldFilter()
+    }
+
+    func testJoinedFieldFilter() throws {
+        try self.benchmarker.testJoinedFieldFilter()
+    }
 
     func testSameChildrenFromKey() throws {
         try self.benchmarker.testSameChildrenFromKey()

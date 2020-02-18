@@ -277,7 +277,6 @@ extension _MongoDB: Database {
             return self.raw[query.schema]
                 .insertMany(documents)
                 .flatMapThrowing { reply in
-                    print("create", reply)
                     guard reply.ok == 1, reply.insertCount == documents.count else {
                         throw FluentMongoError.insertFailed
                     }
@@ -493,9 +492,7 @@ extension _MongoDB: Database {
                             namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                             sessionId: nil
                         )
-                    }.map { reply in
-                        print(reply)
-                    }
+                    }.map { _ in }
                     
                     futures.append(createdIndex)
                 case .foreignKey, .custom:
