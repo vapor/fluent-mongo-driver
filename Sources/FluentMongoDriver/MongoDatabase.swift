@@ -88,13 +88,55 @@ extension DatabaseQuery.Filter.Method {
             case (true, true):
                 return "$lte"
             }
-        case .custom, .contains, .subset:
+        case .subset:
+            return "$in"
+        case .custom, .contains:
             fatalError("Unsupported") // TODO:
         }
     }
 }
 
+extension DatabaseQuery.Sort.Direction {
+    internal func mongo() throws -> SortOrder {
+        switch self {
+        case .ascending:
+            return .ascending
+        case .descending:
+            return .descending
+        case .custom(let order as SortOrder):
+            return order
+        case .custom:
+            throw FluentMongoError.unsupportedCustomSort
+        }
+    }
+}
+
 extension DatabaseQuery {
+    internal func makeMongoDBSort() throws -> MongoKitten.Sort? {
+        var sortSpec = [(String, SortOrder)]()
+        
+        for sort in sorts {
+            switch sort {
+            case .sort(let field, let direction):
+            switch field {
+                case .field(let path, _, _):
+                    let path = path.joined(separator: ".")
+                    sortSpec.append((path, try direction.mongo()))
+                case .custom, .aggregate:
+                    throw FluentMongoError.unsupportedField
+                }
+            case .custom:
+                throw FluentMongoError.unsupportedCustomSort
+            }
+        }
+        
+        if sortSpec.isEmpty {
+            return nil
+        }
+        
+        return MongoKitten.Sort(sortSpec)
+    }
+    
     internal func makeMongoDBFilter() throws -> Document {
         var conditions = [Document]()
 
@@ -110,29 +152,23 @@ extension DatabaseQuery {
                 case .custom, .field, .aggregate:
                     throw FluentMongoError.unsupportedField
                 }
+            case .field:
+                throw FluentMongoError.unsupportedFilter
+            case .group:
+                throw FluentMongoError.unsupportedFilter
             case .custom(let filter as Document):
                 conditions.append(filter)
             case .custom:
                 throw FluentMongoError.unsupportedCustomFilter
-            case .field(let lhs, let operation, let rhs):
-                guard
-                    case .field(let lhsPath, _, _) = lhs, lhsPath.count == 1,
-                    case .field(let rhsPath, _, _) = rhs, rhsPath.count == 1
-                else {
-                    throw FluentMongoError.unsupportedFilter
-                }
-                
-                let filterOperator = operation.mongoOperator
-                var filter = Document()
-                filter[lhsPath[0]][filterOperator] = "$\(rhsPath[0])"
-                conditions.append(filter)
-            case .group:
-                throw FluentMongoError.unsupportedFilter
             }
         }
         
         if conditions.isEmpty {
             return [:]
+        }
+        
+        if conditions.count == 1 {
+            return conditions[0]
         }
         
         return AndQuery(conditions: conditions).makeDocument()
@@ -178,7 +214,15 @@ extension _MongoDB: Database {
         case .create:
             return create(query: query, onRow: onRow)
         case .read:
-            return read(query: query, onRow: onRow)
+            if
+                query.fields.count == 1,
+                case .aggregate(let aggregate) = query.fields[0],
+                case .fields(let method, _) = aggregate
+            {
+                return self.aggregate(query: query, method: method, onRow: onRow)
+            } else {
+                return read(query: query, onRow: onRow)
+            }
         case .update:
             return update(query: query, onRow: onRow)
         case .delete:
@@ -212,6 +256,44 @@ extension _MongoDB: Database {
         }
     }
     
+    private func aggregate(
+        query: DatabaseQuery,
+        method: DatabaseQuery.Field.Aggregate.Method,
+        onRow: @escaping (DatabaseRow) -> ()
+    ) -> EventLoopFuture<Void> {
+        switch method {
+        case .count:
+            do {
+                let condition = try query.makeMongoDBFilter()
+                let count = CountCommand(on: query.schema, where: condition)
+                
+                return cluster.next(for: .init(writable: false)).flatMap { connection in
+                    return connection.executeCodable(
+                        count,
+                        namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
+                        sessionId: nil
+                    )
+                }.flatMapThrowing { reply in
+                    let reply = try BSONDecoder().decode(CountReply.self, from: reply.getDocument())
+                    
+                    onRow(
+                        _MongoDBEntity(
+                            document: ["fluentAggregate": reply.count],
+                            decoder: BSONDecoder()
+                        )
+                    )
+                }
+            } catch {
+                return eventLoop.makeFailedFuture(error)
+            }
+        case .average, .maximum, .minimum, .sum:
+            // TODO:
+            fallthrough
+        case .custom:
+            return eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAggregate)
+        }
+    }
+    
     private func read(
         query: DatabaseQuery,
         onRow: @escaping (DatabaseRow) -> ()
@@ -238,6 +320,12 @@ extension _MongoDB: Database {
                 break
             }
             
+            find.command.sort = try query.makeMongoDBSort()?.document
+            
+            if query.joins.count > 0 {
+                fatalError()
+            }
+            
             return find.forEach { document in
                 onRow(_MongoDBEntity(document: document, decoder: BSONDecoder()))
             }
@@ -254,13 +342,17 @@ extension _MongoDB: Database {
             let filter = try query.makeMongoDBFilter()
             let update = try query.makeValueDocuments()
             
-            let updates = update.map { document in
-                return UpdateCommand.UpdateRequest(
+            let updates = update.map { document -> UpdateCommand.UpdateRequest in
+                var update = UpdateCommand.UpdateRequest(
                     where: filter,
                     to: [
                         "$set": document
                     ]
                 )
+                
+                update.multi = true
+                
+                return update
             }
             
             let command = UpdateCommand(updates: updates, inCollection: query.schema)
@@ -382,5 +474,5 @@ extension DatabaseDriverFactory {
 enum FluentMongoError: Error {
     case missingHosts, noTargetDatabaseSpecified
     case unsupportedField, unsupportedDefaultValue, insertFailed, unsupportedFilter
-    case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction
+    case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction, unsupportedCustomSort, unsupportedCustomAggregate
 }

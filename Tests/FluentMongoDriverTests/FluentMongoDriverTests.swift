@@ -25,21 +25,21 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testDelete()
     }
 
-// TODO:   func testEagerLoadChildren() throws {
-//        try self.benchmarker.testEagerLoadChildren()
-//    }
-//
-//    func testEagerLoadParent() throws {
-//        try self.benchmarker.testEagerLoadParent()
-//    }
-//
-//    func testEagerLoadParentJSON() throws {
-//        try self.benchmarker.testEagerLoadParentJSON()
-//    }
-//
-//    func testEagerLoadChildrenJSON() throws {
-//        try self.benchmarker.testEagerLoadChildrenJSON()
-//    }
+    func testEagerLoadChildren() throws {
+        try self.benchmarker.testEagerLoadChildren()
+    }
+
+    func testEagerLoadParent() throws {
+        try self.benchmarker.testEagerLoadParent()
+    }
+
+    func testEagerLoadParentJSON() throws {
+        try self.benchmarker.testEagerLoadParentJSON()
+    }
+
+    func testEagerLoadChildrenJSON() throws {
+        try self.benchmarker.testEagerLoadChildrenJSON()
+    }
 
     func testMigrator() throws {
         try self.benchmarker.testMigrator()
@@ -113,9 +113,10 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testNewModelDecode()
     }
 
-    func testSiblingsAttach() throws {
-        try self.benchmarker.testSiblingsAttach()
-    }
+// FIXME: This does a join
+//    func testSiblingsAttach() throws {
+//        try self.benchmarker.testSiblingsAttach()
+//    }
 
 //    func testSiblingsEagerLoad() throws {
 //        try self.benchmarker.testSiblingsEagerLoad()
@@ -129,25 +130,27 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testParentSerialization()
     }
 
+    // FIXME: This does a join
 //    func testMultipleJoinSameTable() throws {
 //        try self.benchmarker.testMultipleJoinSameTable()
 //    }
 
-//    func testOptionalParent() throws {
-//        try self.benchmarker.testOptionalParent()
-//    }
-
-    func testFieldFilter() throws {
-        try self.benchmarker.testFieldFilter()
+    func testOptionalParent() throws {
+        try self.benchmarker.testOptionalParent()
     }
 
+// TODO: Field filters require an aggregate, which is not simple
+//    func testFieldFilter() throws {
+//        try self.benchmarker.testFieldFilter()
+//    }
+//
 //    func testJoinedFieldFilter() throws {
 //        try self.benchmarker.testJoinedFieldFilter()
 //    }
 
-//    func testSameChildrenFromKey() throws {
-//        try self.benchmarker.testSameChildrenFromKey()
-//    }
+    func testSameChildrenFromKey() throws {
+        try self.benchmarker.testSameChildrenFromKey()
+    }
 
     func testArray() throws {
         try self.benchmarker.testArray()
@@ -251,7 +254,7 @@ final class FluentMongoDriverTests: XCTestCase {
         try new.save(on: self.db).wait()
     }
 
-    func testCustomJSON() throws {
+    func testCustomData() throws {
         struct Metadata: Codable {
             let createdAt: Date
         }
