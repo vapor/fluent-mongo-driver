@@ -6,17 +6,17 @@
         "repositoryURL": "https://github.com/OpenKitten/BSON.git",
         "state": {
           "branch": null,
-          "revision": "efa59a5cd635b5114ca7484cb74b0ae8f24b4d86",
-          "version": "7.0.13"
+          "revision": "8d15f3aa0bad315bcae07e303143da2713c9ecdd",
+          "version": "7.0.14"
         }
       },
       {
         "package": "fluent-kit",
         "repositoryURL": "https://github.com/vapor/fluent-kit.git",
         "state": {
-          "branch": null,
-          "revision": "92c3ed001c2f74443d17f93b93604723a9064e1f",
-          "version": "1.0.0-beta.4.4"
+          "branch": "tn-field-key",
+          "revision": "2aa21b3fbe3cb8a1fdc0150fd7664f5c60542f23",
+          "version": null
         }
       },
       {

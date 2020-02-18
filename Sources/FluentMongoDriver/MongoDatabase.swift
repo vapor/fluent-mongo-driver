@@ -26,18 +26,35 @@ public protocol MongoDB {
     var raw: MongoDatabase { get }
 }
 
+extension FieldKey {
+    func makeMongoKey() throws -> String {
+        switch self {
+        case .id:
+            return "_id"
+        case .name(let name):
+            return name
+        case .prefixed:
+            throw FluentMongoError.unsupportedJoin
+        }
+    }
+}
+
 struct _MongoDBEntity: DatabaseRow {
     let document: Document
     let decoder: BSONDecoder
     
     var description: String { document.debugDescription }
     
-    func contains(field: String) -> Bool {
-        document.containsKey(field)
+    func contains(field: FieldKey) -> Bool {
+        do {
+            return try document.containsKey(field.makeMongoKey())
+        } catch {
+            return false
+        }
     }
     
-    func decode<T>(field: String, as type: T.Type, for database: Database) throws -> T where T : Decodable {
-        try decoder.decode(type, fromPrimitive: document[field] ?? Null())
+    func decode<T>(field: FieldKey, as type: T.Type, for database: Database) throws -> T where T : Decodable {
+        try decoder.decode(type, fromPrimitive: document[field.makeMongoKey()] ?? Null())
     }
 }
 
@@ -73,7 +90,7 @@ extension DatabaseQuery.Value {
 }
 
 extension DatabaseQuery.Filter.Method {
-    var mongoOperator: String {
+    func makeMongoOperator() throws -> String {
         switch self {
         case .equality(let inverse):
             return inverse ? "$ne" : "$eq"
@@ -91,13 +108,13 @@ extension DatabaseQuery.Filter.Method {
         case .subset:
             return "$in"
         case .custom, .contains:
-            fatalError("Unsupported") // TODO:
+            throw FluentMongoError.unsupportedOperator
         }
     }
 }
 
 extension DatabaseQuery.Sort.Direction {
-    internal func mongo() throws -> SortOrder {
+    internal func makeMongoDirection() throws -> SortOrder {
         switch self {
         case .ascending:
             return .ascending
@@ -111,6 +128,43 @@ extension DatabaseQuery.Sort.Direction {
     }
 }
 
+extension DatabaseQuery.Filter {
+    internal func makeMongoDBFilter() throws -> Document {
+        switch self {
+        case .value(let field, let operation, let value):
+            switch field {
+            case .field(let path, _, _):
+                let filterOperator = try operation.makeMongoOperator()
+                var filter = Document()
+                let path = try path.map { try $0.makeMongoKey() }.joined(separator: ".")
+                try filter[path][filterOperator] = value.makePrimitive()
+                return filter
+            case .custom, .aggregate:
+                throw FluentMongoError.unsupportedField
+            }
+        case .field:
+            throw FluentMongoError.unsupportedFilter
+        case .group(let conditions, let relation):
+            let conditions = try conditions.map { condition in
+                return try condition.makeMongoDBFilter()
+            }
+            
+            switch relation {
+            case .and:
+                return AndQuery(conditions: conditions).makeDocument()
+            case .or:
+                return OrQuery(conditions: conditions).makeDocument()
+            case .custom:
+                throw FluentMongoError.unsupportedCustomFilter
+            }
+        case .custom(let filter as Document):
+            return filter
+        case .custom:
+            throw FluentMongoError.unsupportedCustomFilter
+        }
+    }
+}
+
 extension DatabaseQuery {
     internal func makeMongoDBSort() throws -> MongoKitten.Sort? {
         var sortSpec = [(String, SortOrder)]()
@@ -120,8 +174,8 @@ extension DatabaseQuery {
             case .sort(let field, let direction):
             switch field {
                 case .field(let path, _, _):
-                    let path = path.joined(separator: ".")
-                    sortSpec.append((path, try direction.mongo()))
+                    let path = try path.map { try $0.makeMongoKey() }.joined(separator: ".")
+                    try sortSpec.append((path, direction.makeMongoDirection()))
                 case .custom, .aggregate:
                     throw FluentMongoError.unsupportedField
                 }
@@ -141,26 +195,7 @@ extension DatabaseQuery {
         var conditions = [Document]()
 
         for filter in filters {
-            switch filter {
-            case .value(let field, let operation, let value):
-                switch field {
-                case .field(let path, _, _) where path.count == 1:
-                    let filterOperator = operation.mongoOperator
-                    var filter = Document()
-                    filter[path[0]][filterOperator] = try value.makePrimitive()
-                    conditions.append(filter)
-                case .custom, .field, .aggregate:
-                    throw FluentMongoError.unsupportedField
-                }
-            case .field:
-                throw FluentMongoError.unsupportedFilter
-            case .group:
-                throw FluentMongoError.unsupportedFilter
-            case .custom(let filter as Document):
-                conditions.append(filter)
-            case .custom:
-                throw FluentMongoError.unsupportedCustomFilter
-            }
+            conditions.append(try filter.makeMongoDBFilter())
         }
         
         if conditions.isEmpty {
@@ -178,7 +213,7 @@ extension DatabaseQuery {
         let keys = try fields.map { field -> String in
             switch field {
             case .field(let path, _, _) where path.count == 1:
-                return path[0]
+                return try path[0].makeMongoKey()
             case .aggregate, .custom, .field:
                 throw FluentMongoError.unsupportedField
             }
@@ -242,7 +277,8 @@ extension _MongoDB: Database {
             return self.raw[query.schema]
                 .insertMany(documents)
                 .flatMapThrowing { reply in
-                    guard reply.ok == 1 else {
+                    print("create", reply)
+                    guard reply.ok == 1, reply.insertCount == documents.count else {
                         throw FluentMongoError.insertFailed
                     }
                     
@@ -299,6 +335,10 @@ extension _MongoDB: Database {
         onRow: @escaping (DatabaseRow) -> ()
     ) -> EventLoopFuture<Void> {
         do {
+            if query.joins.count > 0 {
+                throw FluentMongoError.unsupportedJoin
+            }
+            
             let condition = try query.makeMongoDBFilter()
             let find = self.raw[query.schema].find(condition)
             
@@ -321,10 +361,6 @@ extension _MongoDB: Database {
             }
             
             find.command.sort = try query.makeMongoDBSort()?.document
-            
-            if query.joins.count > 0 {
-                fatalError()
-            }
             
             return find.forEach { document in
                 onRow(_MongoDBEntity(document: document, decoder: BSONDecoder()))
@@ -418,7 +454,59 @@ extension _MongoDB: Database {
     }
     
     func execute(schema: DatabaseSchema) -> EventLoopFuture<Void> {
-        raw.eventLoop.makeSucceededFuture(())
+        do {
+            var futures = [EventLoopFuture<Void>]()
+            
+            nextConstraint: for constraint in schema.constraints {
+                switch constraint {
+                case .unique(let fields):
+                    let indexKeys = try fields.map { field -> String in
+                        switch field {
+                        case .key(let key):
+                            return try key.makeMongoKey()
+                        case .custom:
+                            throw FluentMongoError.invalidIndexKey
+                        }
+                    }
+                    
+                    var keys = Document()
+                    
+                    for key in indexKeys {
+                        keys[key] = SortOrder.ascending.rawValue
+                    }
+                    
+                    var index = CreateIndexes.Index(
+                        named: "unique",
+                        keys: keys
+                    )
+                    
+                    index.unique = true
+                    
+                    let createIndexes = CreateIndexes(
+                        collection: schema.schema,
+                        indexes: [index]
+                    )
+                    
+                    let createdIndex = cluster.next(for: .init(writable: false)).flatMap { connection in
+                        return connection.executeCodable(
+                            createIndexes,
+                            namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
+                            sessionId: nil
+                        )
+                    }.map { reply in
+                        print(reply)
+                    }
+                    
+                    futures.append(createdIndex)
+                case .foreignKey, .custom:
+                    continue nextConstraint
+                }
+            }
+            
+            return EventLoopFuture.andAllSucceed(futures, on: eventLoop)
+        } catch {
+            return eventLoop.makeFailedFuture(error)
+        }
     }
     
     func transaction<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
@@ -477,8 +565,24 @@ extension DatabaseDriverFactory {
     }
 }
 
-enum FluentMongoError: Error {
-    case missingHosts, noTargetDatabaseSpecified
+extension MongoWriteError: DatabaseError {
+    public var isSyntaxError: Bool { false }
+    public var isConstraintFailure: Bool { false }
+    public var isConnectionClosed: Bool { false }
+}
+
+extension MongoError: DatabaseError {
+    public var isSyntaxError: Bool { false }
+    public var isConstraintFailure: Bool { false }
+    public var isConnectionClosed: Bool { false }
+}
+
+enum FluentMongoError: Error, DatabaseError {
+    var isSyntaxError: Bool { false }
+    var isConstraintFailure: Bool { false }
+    var isConnectionClosed: Bool { false }
+    
+    case missingHosts, noTargetDatabaseSpecified, unsupportedJoin, unsupportedOperator, invalidIndexKey
     case unsupportedField, unsupportedDefaultValue, insertFailed, unsupportedFilter
     case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction, unsupportedCustomSort, unsupportedCustomAggregate
 }

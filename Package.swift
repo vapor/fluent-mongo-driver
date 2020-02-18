@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.0.0-beta.4"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", .revision("tn-field-key")),
         .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.0.0"),
     ],
     targets: [
