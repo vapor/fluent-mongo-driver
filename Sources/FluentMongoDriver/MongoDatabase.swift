@@ -11,9 +11,9 @@ struct _MongoDB: DatabaseDriver, MongoDB {
     public let raw: MongoDatabase
     let context: DatabaseContext
     
-    init(cluster: MongoCluster, databaseName: String) {
+    init(cluster: MongoCluster, database: MongoDatabase) {
         self.cluster = cluster
-        self.raw = cluster[databaseName]
+        self.raw = database
         self.context = DatabaseContext(
             configuration: .init(),
             logger: Logger.defaultMongoCore,
@@ -422,16 +422,22 @@ extension _MongoDB: Database {
     }
     
     func transaction<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
-        //        do {
-        //            let transactionDatabase = try database.startTransaction(autoCommitChanges: false)
-        //            let database = _MongoDB(database: transactionDatabase)
-        //            return closure(database)
-        //             TODO: Commit
-        //        } catch {
-        //            return database.eventLoop.makeFailedFuture(error)
-        //        }
-        
-        fatalError("Unimplemented")
+        do {
+            let transactionDatabase = try raw.startTransaction(autoCommitChanges: false)
+            let database = _MongoDB(
+                cluster: self.cluster,
+                database: transactionDatabase
+            )
+            return closure(database).flatMap { value in
+                transactionDatabase.commit().map { value }
+            }.flatMapError { error in
+                transactionDatabase.abort().flatMapThrowing { _ in
+                    throw error
+                }
+            }
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
     
     func withConnection<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
@@ -456,7 +462,7 @@ extension DatabaseDriverFactory {
                 let cluster = try MongoCluster(lazyConnectingTo: settings, on: databases.eventLoopGroup)
                 return _MongoDB(
                     cluster: cluster,
-                    databaseName: targetDatabase
+                    database: cluster[targetDatabase]
                 )
             } catch {
                 fatalError("The MongoDB connection specification was malformed")

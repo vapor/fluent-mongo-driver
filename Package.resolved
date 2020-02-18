@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/vapor/fluent-kit.git",
         "state": {
           "branch": null,
-          "revision": "956b772e94ff2c92a2161c03b360ac12d6520a80",
-          "version": "1.0.0-beta.4.3"
+          "revision": "92c3ed001c2f74443d17f93b93604723a9064e1f",
+          "version": "1.0.0-beta.4.4"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/OpenKitten/MongoKitten.git",
         "state": {
           "branch": null,
-          "revision": "416edab9552f89a6d4134913649731c200fe9ee2",
-          "version": "6.0.3"
+          "revision": "e4fb0a7033a890e017e2212c15822f026e4d0c36",
+          "version": "6.0.4"
         }
       },
       {
