@@ -1,3 +1,6 @@
+import MongoKitten
+import FluentKit
+
 struct _MongoDBEntity: DatabaseRow {
     let document: Document
     let decoder: BSONDecoder
