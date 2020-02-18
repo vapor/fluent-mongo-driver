@@ -25,21 +25,21 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testDelete()
     }
 
-    func testEagerLoadChildren() throws {
-        try self.benchmarker.testEagerLoadChildren()
-    }
-
-    func testEagerLoadParent() throws {
-        try self.benchmarker.testEagerLoadParent()
-    }
-
-    func testEagerLoadParentJSON() throws {
-        try self.benchmarker.testEagerLoadParentJSON()
-    }
-
-    func testEagerLoadChildrenJSON() throws {
-        try self.benchmarker.testEagerLoadChildrenJSON()
-    }
+// TODO:   func testEagerLoadChildren() throws {
+//        try self.benchmarker.testEagerLoadChildren()
+//    }
+//
+//    func testEagerLoadParent() throws {
+//        try self.benchmarker.testEagerLoadParent()
+//    }
+//
+//    func testEagerLoadParentJSON() throws {
+//        try self.benchmarker.testEagerLoadParentJSON()
+//    }
+//
+//    func testEagerLoadChildrenJSON() throws {
+//        try self.benchmarker.testEagerLoadChildrenJSON()
+//    }
 
     func testMigrator() throws {
         try self.benchmarker.testMigrator()
@@ -49,9 +49,9 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testMigratorError()
     }
 
-    func testJoin() throws {
-        try self.benchmarker.testJoin()
-    }
+//    func testJoin() throws {
+//        try self.benchmarker.testJoin()
+//    }
 
     func testBatchCreate() throws {
         try self.benchmarker.testBatchCreate()
@@ -117,9 +117,9 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testSiblingsAttach()
     }
 
-    func testSiblingsEagerLoad() throws {
-        try self.benchmarker.testSiblingsEagerLoad()
-    }
+//    func testSiblingsEagerLoad() throws {
+//        try self.benchmarker.testSiblingsEagerLoad()
+//    }
 
     func testParentGet() throws {
         try self.benchmarker.testParentGet()
@@ -129,25 +129,25 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testParentSerialization()
     }
 
-    func testMultipleJoinSameTable() throws {
-        try self.benchmarker.testMultipleJoinSameTable()
-    }
+//    func testMultipleJoinSameTable() throws {
+//        try self.benchmarker.testMultipleJoinSameTable()
+//    }
 
-    func testOptionalParent() throws {
-        try self.benchmarker.testOptionalParent()
-    }
+//    func testOptionalParent() throws {
+//        try self.benchmarker.testOptionalParent()
+//    }
 
     func testFieldFilter() throws {
         try self.benchmarker.testFieldFilter()
     }
 
-    func testJoinedFieldFilter() throws {
-        try self.benchmarker.testJoinedFieldFilter()
-    }
+//    func testJoinedFieldFilter() throws {
+//        try self.benchmarker.testJoinedFieldFilter()
+//    }
 
-    func testSameChildrenFromKey() throws {
-        try self.benchmarker.testSameChildrenFromKey()
-    }
+//    func testSameChildrenFromKey() throws {
+//        try self.benchmarker.testSameChildrenFromKey()
+//    }
 
     func testArray() throws {
         try self.benchmarker.testArray()
@@ -177,9 +177,9 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testMultipleSet()
     }
 
-    func testTransaction() throws {
-        try self.benchmarker.testTransaction()
-    }
+//    func testTransaction() throws {
+//        try self.benchmarker.testTransaction()
+//    }
 
     func testPagination() throws {
         try self.benchmarker.testPagination()
