@@ -1,7 +1,6 @@
 import XCTest
-
-import FluentMongo
+import FluentMongoDriver
 
 var tests = [XCTestCaseEntry]()
-tests += FluentMongoDBTests.allTests()
+tests += FluentMongoDriverTests.allTests()
 XCTMain(tests)
