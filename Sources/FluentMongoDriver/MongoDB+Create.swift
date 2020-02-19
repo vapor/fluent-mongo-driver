@@ -17,9 +17,7 @@ extension _MongoDB {
                         throw FluentMongoError.insertFailed
                     }
                     
-                    let reply = _MongoDBEntity(document: [
-                        "insertCount": reply.insertCount
-                    ], decoder: BSONDecoder())
+                    let reply = _MongoDBAggregateResponse(value: reply.insertCount, decoder: BSONDecoder())
                     onRow(reply)
                 }
         } catch {

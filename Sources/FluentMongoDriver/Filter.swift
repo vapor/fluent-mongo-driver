@@ -29,16 +29,11 @@ extension DatabaseQuery.Filter {
     internal func makeMongoDBFilter() throws -> Document {
         switch self {
         case .value(let field, let operation, let value):
-            switch field {
-            case .field(let path, _, _):
-                let filterOperator = try operation.makeMongoOperator()
-                var filter = Document()
-                let path = try path.map { try $0.makeMongoKey() }.joined(separator: ".")
-                try filter[path][filterOperator] = value.makePrimitive()
-                return filter
-            case .custom, .aggregate:
-                throw FluentMongoError.unsupportedField
-            }
+            let path = try field.makeMongoPath()
+            let filterOperator = try operation.makeMongoOperator()
+            var filter = Document()
+            try filter[path][filterOperator] = value.makePrimitive()
+            return filter
         case .field:
             throw FluentMongoError.unsupportedFilter
         case .group(let conditions, let relation):

@@ -31,13 +31,10 @@ extension _MongoDB {
                     namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                     sessionId: nil
                 )
-            }.flatMapThrowing { reply in
-                onRow(
-                    _MongoDBEntity(
-                        document: try reply.getDocument(),
-                        decoder: BSONDecoder()
-                    )
-                )
+            }.decode(UpdateReply.self).flatMapThrowing { reply in
+                let reply = _MongoDBAggregateResponse(value: reply.updatedCount, decoder: BSONDecoder())
+                
+                onRow(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)

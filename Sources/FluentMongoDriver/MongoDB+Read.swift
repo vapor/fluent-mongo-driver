@@ -8,10 +8,6 @@ extension _MongoDB {
         onRow: @escaping (DatabaseRow) -> ()
     ) -> EventLoopFuture<Void> {
         do {
-            if query.joins.count > 0 {
-                throw FluentMongoError.unsupportedJoin
-            }
-            
             let condition = try query.makeMongoDBFilter()
             let find = self.raw[query.schema].find(condition)
             

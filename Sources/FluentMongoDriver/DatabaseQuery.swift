@@ -8,13 +8,8 @@ extension DatabaseQuery {
         for sort in sorts {
             switch sort {
             case .sort(let field, let direction):
-            switch field {
-                case .field(let path, _, _):
-                    let path = try path.map { try $0.makeMongoKey() }.joined(separator: ".")
-                    try sortSpec.append((path, direction.makeMongoDirection()))
-                case .custom, .aggregate:
-                    throw FluentMongoError.unsupportedField
-                }
+                let path = try field.makeMongoPath()
+                try sortSpec.append((path, direction.makeMongoDirection()))
             case .custom:
                 throw FluentMongoError.unsupportedCustomSort
             }
@@ -50,7 +45,7 @@ extension DatabaseQuery {
             switch field {
             case .field(let path, _, _) where path.count == 1:
                 return try path[0].makeMongoKey()
-            case .aggregate, .custom, .field:
+            case .custom, .field:
                 throw FluentMongoError.unsupportedField
             }
         }
