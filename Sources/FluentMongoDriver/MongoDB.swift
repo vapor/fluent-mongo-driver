@@ -34,16 +34,12 @@ extension _MongoDB: Database {
         switch query.action {
         case .create:
             return create(query: query, onRow: onRow)
+        case .aggregate(let aggregate):
+            return self.aggregate(query: query, aggregate: aggregate, onRow: onRow)
+        case .read where query.joins.isEmpty:
+            return read(query: query, onRow: onRow)
         case .read:
-            if
-                query.fields.count == 1,
-                case .aggregate(let aggregate) = query.fields[0],
-                case .fields(let method, _) = aggregate
-            {
-                return self.aggregate(query: query, method: method, onRow: onRow)
-            } else {
-                return read(query: query, onRow: onRow)
-            }
+            return join(query: query, onRow: onRow)
         case .update:
             return update(query: query, onRow: onRow)
         case .delete:
