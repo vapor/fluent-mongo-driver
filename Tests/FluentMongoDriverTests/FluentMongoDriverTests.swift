@@ -237,12 +237,12 @@ final class FluentMongoDriverTests: XCTestCase {
         self.threadPool = NIOThreadPool(numberOfThreads: 1)
         self.dbs = Databases(threadPool: threadPool, on: self.eventLoopGroup)
         try! self.dbs.use(.mongo(connectionString: "mongodb://localhost/vapor-test"), as: .mongo)
+        
+        let driver = self.dbs.driver() as! MongoDB
+        try! driver.raw.drop().wait()
     }
 
     override func tearDown() {
-        let driver = self.dbs.driver() as! MongoDB
-        try! driver.raw.drop().wait()
-        
         self.dbs.shutdown()
         
         try! self.threadPool.syncShutdownGracefully()

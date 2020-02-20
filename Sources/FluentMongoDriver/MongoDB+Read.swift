@@ -32,7 +32,11 @@ extension _MongoDB {
             find.command.sort = try query.makeMongoDBSort()?.document
             
             return find.forEach { document in
-                onRow(_MongoDBEntity(document: document, decoder: BSONDecoder()))
+                onRow(_MongoDBEntity(
+                    document: document,
+                    decoder: BSONDecoder(),
+                    aggregateQuery: nil
+                ))
             }
         } catch {
             return eventLoop.makeFailedFuture(error)

@@ -7,8 +7,8 @@ extension FieldKey {
             return "_id"
         case .string(let name):
             return name
-        case .prefixed(_, let key):
-            return try key.makeMongoKey()
+        case .prefixed(let prefix, let key):
+            return try prefix + key.makeMongoKey()
         case .aggregate:
             throw FluentMongoError.unsupportedJoin
         }

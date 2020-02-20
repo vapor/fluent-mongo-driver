@@ -9,8 +9,14 @@ extension _MongoDB {
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
+            
             return self.raw[query.schema].aggregate(stages).forEach { document in
-                onRow(_MongoDBEntity(document: document, decoder: BSONDecoder()))
+                print(document)
+                onRow(_MongoDBEntity(
+                    document: document,
+                    decoder: BSONDecoder(),
+                    aggregateQuery: query
+                ))
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -24,9 +30,9 @@ extension _MongoDB {
         do {
             let stages = try query.makeAggregatePipeline()
             return self.raw[query.schema].aggregate(stages).count().map { count in
-            let reply = _MongoDBAggregateResponse(value: count, decoder: BSONDecoder())
-            
-            onRow(reply)
+                let reply = _MongoDBAggregateResponse(value: count, decoder: BSONDecoder())
+                
+                onRow(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -68,7 +74,13 @@ extension DatabaseQuery {
             try moveProjection[field.makeProjectedMongoPath()] = "$\(field.makeMongoPath())"
         }
 
-        stages.append(project(Projection(document: moveProjection)))
+        stages.append(AggregateBuilderStage(document: [
+            "$replaceRoot": [
+                "newRoot": [
+                    self.schema: "$$ROOT"
+                ]
+            ]
+        ]))
         
         for join in joins {
             switch join {
@@ -83,15 +95,19 @@ extension DatabaseQuery {
                         from: collection,
                         localField: try localKey.makeProjectedMongoPath(),
                         foreignField: try foreignKey.makeMongoPath(),
-                        as: try foreignKey.makeProjectedMongoPath()
+                        as: alias ?? collection
                     ))
                 case .inner:
                     stages.append(lookup(
                         from: collection,
                         localField: try localKey.makeProjectedMongoPath(),
                         foreignField: try foreignKey.makeMongoPath(),
-                        as: alias ?? schema
+                        as: alias ?? collection
                     ))
+
+                    stages.append(AggregateBuilderStage(document: [
+                        "$unwind": "$\(alias ?? collection)"
+                    ]))
                 case .right, .custom:
                     fatalError()
                 }
