@@ -2,7 +2,7 @@ import FluentKit
 import MongoKitten
 import MongoCore
 
-extension _MongoDB {
+extension FluentMongoDatabase {
     func delete(
         query: DatabaseQuery,
         onRow: @escaping (DatabaseRow) -> ()
