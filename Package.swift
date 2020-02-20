@@ -1,6 +1,4 @@
-// swift-tools-version:5.1
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
+// swift-tools-version:5.2
 import PackageDescription
 
 let package = Package(
@@ -9,9 +7,7 @@ let package = Package(
        .macOS(.v10_14)
     ],
     products: [
-        .library(
-            name: "FluentMongoDriver",
-            targets: ["FluentMongoDriver"]),
+        .library(name: "FluentMongoDriver", targets: ["FluentMongoDriver"]),
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/fluent-kit.git", .branch("tn-beta-5")),
@@ -20,9 +16,17 @@ let package = Package(
     targets: [
         .target(
             name: "FluentMongoDriver",
-            dependencies: ["FluentKit", "MongoKitten"]),
+            dependencies: [
+                .product(name: "FluentKit", package: "fluent-kit"),
+                .product(name: "MongoKitten", package: "MongoKitten"),
+            ]
+        ),
         .testTarget(
             name: "FluentMongoDriverTests",
-            dependencies: ["FluentMongoDriver", "FluentBenchmark"]),
+            dependencies: [
+                .target(name: "FluentMongoDriver"),
+                .product(name: "FluentBenchmark", package: "fluent-kit"),
+            ]
+        ),
     ]
 )

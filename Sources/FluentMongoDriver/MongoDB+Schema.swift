@@ -2,7 +2,7 @@ import FluentKit
 import MongoKitten
 import MongoCore
 
-extension _MongoDB {
+extension FluentMongoDatabase {
     func execute(schema: DatabaseSchema) -> EventLoopFuture<Void> {
         do {
             var futures = [EventLoopFuture<Void>]()
