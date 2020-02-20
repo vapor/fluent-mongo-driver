@@ -44,7 +44,7 @@ extension DatabaseQuery {
         let keys = try fields.map { field -> String in
             switch field {
             case .field(let path, _, _) where path.count == 1:
-                return try path[0].makeMongoKey()
+                return path[0].makeMongoKey()
             case .custom, .field:
                 throw FluentMongoError.unsupportedField
             }

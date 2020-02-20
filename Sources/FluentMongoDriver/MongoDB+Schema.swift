@@ -13,7 +13,7 @@ extension FluentMongoDatabase {
                     let indexKeys = try fields.map { field -> String in
                         switch field {
                         case .key(let key):
-                            return try key.makeMongoKey()
+                            return key.makeMongoKey()
                         case .custom:
                             throw FluentMongoError.invalidIndexKey
                         }

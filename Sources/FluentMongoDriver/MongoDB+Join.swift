@@ -9,14 +9,26 @@ extension FluentMongoDatabase {
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
-            
+            let decoder = BSONDecoder()
+            var aliases: [String: (schema: String, key: String)] = [:]
+            for field in query.fields {
+                switch field {
+                case .field(let path, let schema, let alias):
+                    if let alias = alias {
+                        aliases[alias] = (schema!, path[0].makeMongoKey())
+                    }
+                default:
+                    fatalError("Unsupported field: \(field).")
+                }
+            }
             return self.raw[query.schema].aggregate(stages).forEach { document in
-                print(document)
-                onRow(_MongoDBEntity(
+                let row = FluentMongoJoinedRow(
                     document: document,
-                    decoder: BSONDecoder(),
-                    aggregateQuery: query
-                ))
+                    decoder: decoder,
+                    schema: query.schema,
+                    aliases: aliases
+                )
+                onRow(row)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -117,5 +129,38 @@ extension DatabaseQuery {
         }
         
         return stages
+    }
+}
+
+private struct FluentMongoJoinedRow: DatabaseRow {
+    let document: Document
+    let decoder: BSONDecoder
+    let schema: String
+    let aliases: [String: (schema: String, key: String)]
+
+    var description: String {
+        self.document.debugDescription
+    }
+
+    func contains(field: FieldKey) -> Bool {
+        self.primitive(field: field) != nil
+    }
+
+    func decode<T>(field: FieldKey, as type: T.Type, for database: Database) throws -> T
+        where T : Decodable
+    {
+        try self.decoder.decode(
+            type,
+            fromPrimitive: self.primitive(field: field) ?? Null()
+        )
+    }
+
+    private func primitive(field: FieldKey) -> Primitive? {
+        let key = field.makeMongoKey()
+        if let (schema, field) = self.aliases[key] {
+            return self.document[schema][field]
+        } else {
+            return self.document[self.schema][key]
+        }
     }
 }
