@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "FluentMongoDriver", targets: ["FluentMongoDriver"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/fluent-kit.git", .branch("tn-beta-5")),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.0.0-beta.4"),
         .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.0.0"),
     ],
     targets: [
