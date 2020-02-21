@@ -2,6 +2,12 @@ import FluentKit
 import MongoKitten
 import MongoCore
 
+extension DatabaseID {
+    public static var mongo: DatabaseID {
+        return .init(string: "mongo")
+    }
+}
+
 struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
     let cluster: MongoCluster
     let raw: MongoDatabase
@@ -27,6 +33,10 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
         case .custom:
             return self.eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAction)
         }
+    }
+
+    func execute(enum: DatabaseEnum) -> EventLoopFuture<Void> {
+        self.raw.eventLoop.makeSucceededFuture(())
     }
 
     func withConnection<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {

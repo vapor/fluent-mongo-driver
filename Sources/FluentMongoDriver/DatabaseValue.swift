@@ -26,6 +26,8 @@ extension DatabaseQuery.Value {
             throw FluentMongoError.unsupportedDefaultValue
         case .custom(let primitive as Primitive):
             return primitive
+        case .enumCase(let string):
+            return string
         case .custom:
             throw FluentMongoError.unsupportedCustomValue
         }
