@@ -15,21 +15,21 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
 
     func execute(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         switch query.action {
         case .create:
-            return self.create(query: query, onRow: onRow)
+            return self.create(query: query, onOutput: onOutput)
         case .aggregate(let aggregate):
-            return self.aggregate(query: query, aggregate: aggregate, onRow: onRow)
+            return self.aggregate(query: query, aggregate: aggregate, onOutput: onOutput)
         case .read where query.joins.isEmpty:
-            return self.read(query: query, onRow: onRow)
+            return self.read(query: query, onOutput: onOutput)
         case .read:
-            return self.join(query: query, onRow: onRow)
+            return self.join(query: query, onOutput: onOutput)
         case .update:
-            return self.update(query: query, onRow: onRow)
+            return self.update(query: query, onOutput: onOutput)
         case .delete:
-            return self.delete(query: query, onRow: onRow)
+            return self.delete(query: query, onOutput: onOutput)
         case .custom:
             return self.eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAction)
         }

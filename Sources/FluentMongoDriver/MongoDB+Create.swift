@@ -5,7 +5,7 @@ import MongoCore
 extension FluentMongoDatabase {
     func create(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let documents = try query.makeValueDocuments()
@@ -16,9 +16,11 @@ extension FluentMongoDatabase {
                     guard reply.ok == 1, reply.insertCount == documents.count else {
                         throw FluentMongoError.insertFailed
                     }
-                    
-                    let reply = _MongoDBAggregateResponse(value: reply.insertCount, decoder: BSONDecoder())
-                    onRow(reply)
+                    let reply = _MongoDBAggregateResponse(
+                        value: reply.insertCount,
+                        decoder: BSONDecoder()
+                    )
+                    onOutput(reply)
                 }
         } catch {
             return eventLoop.makeFailedFuture(error)

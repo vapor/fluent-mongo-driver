@@ -5,7 +5,7 @@ import MongoCore
 extension FluentMongoDatabase {
     func delete(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let filter = try query.makeMongoDBFilter()
@@ -37,8 +37,7 @@ extension FluentMongoDatabase {
                     value: reply.deletes,
                     decoder: BSONDecoder()
                 )
-                
-                onRow(reply)
+                onOutput(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)

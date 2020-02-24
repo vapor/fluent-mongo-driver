@@ -5,7 +5,7 @@ import MongoCore
 extension FluentMongoDatabase {
     func update(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let filter = try query.makeMongoDBFilter()
@@ -32,9 +32,11 @@ extension FluentMongoDatabase {
                     sessionId: nil
                 )
             }.decode(UpdateReply.self).flatMapThrowing { reply in
-                let reply = _MongoDBAggregateResponse(value: reply.updatedCount, decoder: BSONDecoder())
-                
-                onRow(reply)
+                let reply = _MongoDBAggregateResponse(
+                    value: reply.updatedCount,
+                    decoder: BSONDecoder()
+                )
+                onOutput(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
