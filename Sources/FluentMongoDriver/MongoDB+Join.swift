@@ -62,12 +62,6 @@ extension DatabaseQuery {
             break
         }
         
-        var moveProjection = Document()
-        
-        for field in fields {
-            try moveProjection[field.makeProjectedMongoPath()] = "$\(field.makeMongoPath())"
-        }
-
         stages.append(AggregateBuilderStage(document: [
             "$replaceRoot": [
                 "newRoot": [
