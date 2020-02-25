@@ -26,10 +26,17 @@ extension DatabaseQuery.Filter.Method {
 }
 
 extension DatabaseQuery.Filter {
-    internal func makeMongoDBFilter() throws -> Document {
+    internal func makeMongoDBFilter(aggregate: Bool) throws -> Document {
         switch self {
         case .value(let field, let operation, let value):
-            let path = try field.makeMongoPath()
+            let path: String
+            
+            if aggregate {
+                path = try field.makeProjectedMongoPath()
+            } else {
+                path = try field.makeMongoPath()
+            }
+            
             let filterOperator = try operation.makeMongoOperator()
             var filter = Document()
             try filter[path][filterOperator] = value.makePrimitive()
@@ -38,7 +45,7 @@ extension DatabaseQuery.Filter {
             throw FluentMongoError.unsupportedFilter
         case .group(let conditions, let relation):
             let conditions = try conditions.map { condition in
-                return try condition.makeMongoDBFilter()
+                return try condition.makeMongoDBFilter(aggregate: aggregate)
             }
             
             switch relation {

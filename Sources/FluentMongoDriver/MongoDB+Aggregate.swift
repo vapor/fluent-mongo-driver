@@ -55,7 +55,7 @@ extension FluentMongoDatabase {
         onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
-            let condition = try query.makeMongoDBFilter()
+            let condition = try query.makeMongoDBFilter(aggregate: false)
             let count = CountCommand(on: query.schema, where: condition)
             
             return cluster.next(for: .init(writable: false)).flatMap { connection in
@@ -81,7 +81,7 @@ extension FluentMongoDatabase {
     ) -> EventLoopFuture<Void> {
         do {
             let field = try field.makeMongoPath()
-            let condition = try query.makeMongoDBFilter()
+            let condition = try query.makeMongoDBFilter(aggregate: false)
             let find = self.raw[query.schema]
                 .find(condition)
                 .project([

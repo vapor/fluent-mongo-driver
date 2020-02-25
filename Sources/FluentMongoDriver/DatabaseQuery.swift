@@ -22,11 +22,11 @@ extension DatabaseQuery {
         return MongoKitten.Sort(sortSpec)
     }
     
-    internal func makeMongoDBFilter() throws -> Document {
+    internal func makeMongoDBFilter(aggregate: Bool) throws -> Document {
         var conditions = [Document]()
 
         for filter in filters {
-            conditions.append(try filter.makeMongoDBFilter())
+            conditions.append(try filter.makeMongoDBFilter(aggregate: aggregate))
         }
         
         if conditions.isEmpty {

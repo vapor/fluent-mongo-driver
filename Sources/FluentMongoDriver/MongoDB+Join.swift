@@ -38,12 +38,6 @@ extension DatabaseQuery {
     func makeAggregatePipeline() throws -> [AggregateBuilderStage] {
         var stages = [AggregateBuilderStage]()
         
-        let filter = try makeMongoDBFilter()
-        
-        if !filter.isEmpty {
-            stages.append(match(filter))
-        }
-        
         switch limits.first {
         case .count(let n):
             stages.append(limit(n))
@@ -98,6 +92,12 @@ extension DatabaseQuery {
             case .custom:
                 throw FluentMongoError.unsupportedJoin
             }
+        }
+        
+        let filter = try makeMongoDBFilter(aggregate: true)
+        
+        if !filter.isEmpty {
+            stages.append(match(filter))
         }
         
         return stages

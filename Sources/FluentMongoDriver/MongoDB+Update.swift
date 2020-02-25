@@ -8,7 +8,7 @@ extension FluentMongoDatabase {
         onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
-            let filter = try query.makeMongoDBFilter()
+            let filter = try query.makeMongoDBFilter(aggregate: false)
             let update = try query.makeValueDocuments()
             
             let updates = update.map { document -> UpdateCommand.UpdateRequest in

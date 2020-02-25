@@ -18,8 +18,8 @@ extension FieldKey {
 extension DatabaseQuery.Field {
     func makeMongoPath() throws -> String {
         switch self {
-        case .field(let field, let schema):
-        return "\(schema).\(field.makeMongoKey())"
+        case .field(let field, _):
+            return field.makeMongoKey()
         case .custom:
             throw FluentMongoError.unsupportedField
         }
