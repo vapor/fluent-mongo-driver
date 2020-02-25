@@ -11,8 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/fluent-kit.git", .branch("tn-beta-5")),
-//        .package(url: "https://github.com/OpenKitten/MongoKitten.git", .branch("master/6.0")),
-        .package(path: "/Users/joannisorlandos/Projects/MongoKitten"),
+        .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.0.0"),
     ],
     targets: [
         .target(

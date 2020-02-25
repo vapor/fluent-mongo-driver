@@ -85,11 +85,10 @@ extension FluentMongoDatabase {
             let find = self.raw[query.schema]
                 .find(condition)
                 .project([
-                    "n ": [
+                    "n": [
                         mongoOperator: "$\(field)"
                     ]
                 ])
-            
             return find.firstResult().map { result in
                 let res = _MongoDBAggregateResponse(
                     value: result?["n"] ?? Null(),

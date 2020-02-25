@@ -4,9 +4,18 @@ import MongoCore
 
 extension FluentMongoDatabase {
     func execute(schema: DatabaseSchema) -> EventLoopFuture<Void> {
+        switch schema.action {
+        case .create, .update:
+            return self.update(schema: schema)
+        case .delete:
+            return self.delete(schema: schema)
+        }
+    }
+
+    private func update(schema: DatabaseSchema) -> EventLoopFuture<Void> {
         do {
             var futures = [EventLoopFuture<Void>]()
-            
+
             nextConstraint: for constraint in schema.constraints {
                 switch constraint {
                 case .unique(let fields):
@@ -18,25 +27,25 @@ extension FluentMongoDatabase {
                             throw FluentMongoError.invalidIndexKey
                         }
                     }
-                    
+
                     var keys = Document()
-                    
+
                     for key in indexKeys {
                         keys[key] = SortOrder.ascending.rawValue
                     }
-                    
+
                     var index = CreateIndexes.Index(
                         named: "unique",
                         keys: keys
                     )
-                    
+
                     index.unique = true
-                    
+
                     let createIndexes = CreateIndexes(
                         collection: schema.schema,
                         indexes: [index]
                     )
-                    
+
                     let createdIndex = cluster.next(for: .init(writable: false)).flatMap { connection in
                         return connection.executeCodable(
                             createIndexes,
@@ -44,16 +53,20 @@ extension FluentMongoDatabase {
                             sessionId: nil
                         )
                     }.map { _ in }
-                    
+
                     futures.append(createdIndex)
                 case .foreignKey, .custom:
                     continue nextConstraint
                 }
             }
-            
+
             return EventLoopFuture.andAllSucceed(futures, on: eventLoop)
         } catch {
             return eventLoop.makeFailedFuture(error)
         }
+    }
+
+    private func delete(schema: DatabaseSchema) -> EventLoopFuture<Void> {
+        self.raw[schema.schema].drop()
     }
 }

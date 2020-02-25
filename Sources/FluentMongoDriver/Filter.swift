@@ -41,8 +41,22 @@ extension DatabaseQuery.Filter {
             var filter = Document()
             try filter[path][filterOperator] = value.makePrimitive()
             return filter
-        case .field:
-            throw FluentMongoError.unsupportedFilter
+        case .field(let a, let operation, let b):
+            var filter = Document()
+            let fieldA: String
+            let fieldB: String
+            if aggregate {
+                fieldA = try a.makeProjectedMongoPath()
+                fieldB = try b.makeProjectedMongoPath()
+            } else {
+                fieldA = try a.makeMongoPath()
+                fieldB = try b.makeMongoPath()
+            }
+            try filter["$expr"][operation.makeMongoOperator()] = Document(array: [
+                "$\(fieldA)",
+                "$\(fieldB)"
+            ])
+            return filter
         case .group(let conditions, let relation):
             let conditions = try conditions.map { condition in
                 return try condition.makeMongoDBFilter(aggregate: aggregate)

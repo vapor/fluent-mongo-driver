@@ -5,7 +5,9 @@ import FluentMongoDriver
 import XCTest
 
 final class FluentMongoDriverTests: XCTestCase {
-    func testAggregate() throws { try self.benchmarker.testAggregate() }
+    func testAggregate() throws {
+        try self.benchmarker.testAggregate(max: false)
+    }
     func testArray() throws { try self.benchmarker.testArray() }
     func testBatch() throws { try self.benchmarker.testBatch() }
     func testChildren() throws { try self.benchmarker.testChildren() }
@@ -15,12 +17,16 @@ final class FluentMongoDriverTests: XCTestCase {
     func testEagerLoad() throws { try self.benchmarker.testEagerLoad() }
     func testEnum() throws { try self.benchmarker.testEnum() }
     func testGroup() throws { try self.benchmarker.testGroup() }
-//    Tests autoincrement as well:
-//    func testID() throws { try self.benchmarker.testID() }
-//    func testFilter() throws { try self.benchmarker.testFilter() }
-    
-//    Tests comparisons between 2 DB fields:
-//    func testJoin() throws { try self.benchmarker.testJoin() }
+    func testID() throws {
+        try self.benchmarker.testID(
+            autoincrement: false,
+            custom: false
+        )
+    }
+    func testFilter() throws {
+        try self.benchmarker.testFilter(sql: false)
+    }
+    func testJoin() throws { try self.benchmarker.testJoin() }
     func testMiddleware() throws { try self.benchmarker.testMiddleware() }
     func testMigrator() throws { try self.benchmarker.testMigrator() }
     func testModel() throws { try self.benchmarker.testModel() }
@@ -35,7 +41,7 @@ final class FluentMongoDriverTests: XCTestCase {
     func testSoftDelete() throws { try self.benchmarker.testSoftDelete() }
     func testSort() throws { try self.benchmarker.testSort() }
     func testTimestamp() throws { try self.benchmarker.testTimestamp() }
-    func testTransaction() throws { try self.benchmarker.testTransaction() }
+//    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
     
     var benchmarker: FluentBenchmarker {

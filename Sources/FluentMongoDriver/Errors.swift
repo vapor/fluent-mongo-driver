@@ -1,6 +1,7 @@
 import MongoKitten
 import MongoCore
 import FluentKit
+import Foundation
 
 extension MongoWriteError: DatabaseError {
     public var isSyntaxError: Bool { false }
@@ -22,4 +23,11 @@ enum FluentMongoError: Error, DatabaseError {
     case missingHosts, noTargetDatabaseSpecified, unsupportedJoin, unsupportedOperator, invalidIndexKey
     case unsupportedField, unsupportedDefaultValue, insertFailed, unsupportedFilter
     case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction, unsupportedCustomSort, unsupportedCustomAggregate
+}
+
+
+extension FluentMongoError: LocalizedError {
+    var errorDescription: String? {
+        "\(self)"
+    }
 }
