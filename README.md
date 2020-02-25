@@ -1,3 +1,3 @@
-# fluent-mongodb
+# Fluent Mongo Driver
 
-A description of this package.
+MongoKitten based driver for FluentKit.
