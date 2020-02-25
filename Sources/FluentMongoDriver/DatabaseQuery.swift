@@ -22,11 +22,11 @@ extension DatabaseQuery {
         return MongoKitten.Sort(sortSpec)
     }
     
-    internal func makeMongoDBFilter() throws -> Document {
+    internal func makeMongoDBFilter(aggregate: Bool) throws -> Document {
         var conditions = [Document]()
 
         for filter in filters {
-            conditions.append(try filter.makeMongoDBFilter())
+            conditions.append(try filter.makeMongoDBFilter(aggregate: aggregate))
         }
         
         if conditions.isEmpty {
@@ -43,9 +43,9 @@ extension DatabaseQuery {
     internal func makeValueDocuments() throws -> [Document] {
         let keys = try fields.map { field -> String in
             switch field {
-            case .field(let path, _, _) where path.count == 1:
-                return path[0].makeMongoKey()
-            case .custom, .field:
+            case .field(let key, _):
+                return key.makeMongoKey()
+            case .custom:
                 throw FluentMongoError.unsupportedField
             }
         }

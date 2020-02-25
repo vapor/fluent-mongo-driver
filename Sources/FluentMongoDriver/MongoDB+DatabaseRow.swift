@@ -1,17 +1,25 @@
 import MongoKitten
 import FluentKit
 
-struct _MongoDBAggregateResponse: DatabaseRow {
+struct _MongoDBAggregateResponse: DatabaseOutput {
     let value: Primitive
     let decoder: BSONDecoder
     
-    var description: String { String(describing: value) }
-    
-    func contains(field: FieldKey) -> Bool {
-        return field == .aggregate
+    var description: String {
+        "\(self.value)"
+    }
+
+    func schema(_ schema: String) -> DatabaseOutput {
+        self
     }
     
-    func decode<T>(field: FieldKey, as type: T.Type, for database: Database) throws -> T where T : Decodable {
-        try decoder.decode(type, fromPrimitive: value)
+    func contains(_ field: FieldKey) -> Bool {
+        field == .aggregate
+    }
+    
+    func decode<T>(_ field: FieldKey, as type: T.Type) throws -> T
+        where T: Decodable
+    {
+        try self.decoder.decode(type, fromPrimitive: value)
     }
 }

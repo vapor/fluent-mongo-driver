@@ -6,44 +6,44 @@ extension FluentMongoDatabase {
     func aggregate(
         query: DatabaseQuery,
         aggregate: DatabaseQuery.Aggregate,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
-        guard case .fields(let method, let field) = aggregate else {
+        guard case .field(let field, let method) = aggregate else {
             return eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAggregate)
         }
         
         switch method {
         case .count where query.joins.isEmpty:
-            return count(query: query, onRow: onRow)
+            return count(query: query, onOutput: onOutput)
         case .count:
-            return joinCount(query: query, onRow: onRow)
+            return joinCount(query: query, onOutput: onOutput)
         case .sum:
             return group(
                 query: query,
                 mongoOperator: "$sum",
                 field: field,
-                onRow: onRow
+                onOutput: onOutput
             )
         case .average:
             return group(
                 query: query,
                 mongoOperator: "$avg",
                 field: field,
-                onRow: onRow
+                onOutput: onOutput
             )
         case .maximum:
             return group(
                 query: query,
                 mongoOperator: "$max",
                 field: field,
-                onRow: onRow
+                onOutput: onOutput
             )
         case .minimum:
             return group(
                 query: query,
                 mongoOperator: "$min",
                 field: field,
-                onRow: onRow
+                onOutput: onOutput
             )
         case .custom:
             return eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAggregate)
@@ -52,10 +52,10 @@ extension FluentMongoDatabase {
     
     private func count(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
-            let condition = try query.makeMongoDBFilter()
+            let condition = try query.makeMongoDBFilter(aggregate: false)
             let count = CountCommand(on: query.schema, where: condition)
             
             return cluster.next(for: .init(writable: false)).flatMap { connection in
@@ -66,8 +66,7 @@ extension FluentMongoDatabase {
                 )
             }.decode(CountReply.self).flatMapThrowing { reply in
                 let reply = _MongoDBAggregateResponse(value: reply.count, decoder: BSONDecoder())
-                
-                onRow(reply)
+                onOutput(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -78,21 +77,24 @@ extension FluentMongoDatabase {
         query: DatabaseQuery,
         mongoOperator: String,
         field: DatabaseQuery.Field,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let field = try field.makeMongoPath()
-            let condition = try query.makeMongoDBFilter()
+            let condition = try query.makeMongoDBFilter(aggregate: false)
             let find = self.raw[query.schema]
                 .find(condition)
                 .project([
-                    "n ": [
+                    "n": [
                         mongoOperator: "$\(field)"
                     ]
                 ])
-            
             return find.firstResult().map { result in
-                onRow(_MongoDBAggregateResponse(value: result?["n"] ?? Null(), decoder: BSONDecoder()))
+                let res = _MongoDBAggregateResponse(
+                    value: result?["n"] ?? Null(),
+                    decoder: BSONDecoder()
+                )
+                onOutput(res)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)

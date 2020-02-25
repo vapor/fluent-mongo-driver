@@ -14,7 +14,7 @@ extension FluentMongoDatabase {
             return closure(database).flatMap { value in
                 transactionDatabase.commit().map { value }
             }.flatMapError { error in
-                transactionDatabase.abort().flatMapThrowing { _ in
+                return transactionDatabase.abort().flatMapThrowing { _ in
                     throw error
                 }
             }

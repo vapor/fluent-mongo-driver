@@ -5,30 +5,13 @@ import MongoCore
 extension FluentMongoDatabase {
     func join(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
             let decoder = BSONDecoder()
-            var aliases: [String: (schema: String, key: String)] = [:]
-            for field in query.fields {
-                switch field {
-                case .field(let path, let schema, let alias):
-                    if let alias = alias {
-                        aliases[alias] = (schema!, path[0].makeMongoKey())
-                    }
-                default:
-                    fatalError("Unsupported field: \(field).")
-                }
-            }
             return self.raw[query.schema].aggregate(stages).forEach { document in
-                let row = FluentMongoJoinedRow(
-                    document: document,
-                    decoder: decoder,
-                    schema: query.schema,
-                    aliases: aliases
-                )
-                onRow(row)
+                onOutput(document.databaseOutput(using: decoder))
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -37,14 +20,13 @@ extension FluentMongoDatabase {
     
     func joinCount(
         query: DatabaseQuery,
-        onRow: @escaping (DatabaseRow) -> ()
+        onOutput: @escaping (DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
             return self.raw[query.schema].aggregate(stages).count().map { count in
                 let reply = _MongoDBAggregateResponse(value: count, decoder: BSONDecoder())
-                
-                onRow(reply)
+                onOutput(reply)
             }
         } catch {
             return eventLoop.makeFailedFuture(error)
@@ -55,12 +37,6 @@ extension FluentMongoDatabase {
 extension DatabaseQuery {
     func makeAggregatePipeline() throws -> [AggregateBuilderStage] {
         var stages = [AggregateBuilderStage]()
-        
-        let filter = try makeMongoDBFilter()
-        
-        if !filter.isEmpty {
-            stages.append(match(filter))
-        }
         
         switch limits.first {
         case .count(let n):
@@ -80,12 +56,6 @@ extension DatabaseQuery {
             break
         }
         
-        var moveProjection = Document()
-        
-        for field in fields {
-            try moveProjection[field.makeProjectedMongoPath()] = "$\(field.makeMongoPath())"
-        }
-
         stages.append(AggregateBuilderStage(document: [
             "$replaceRoot": [
                 "newRoot": [
@@ -96,31 +66,27 @@ extension DatabaseQuery {
         
         for join in joins {
             switch join {
-            case .join(let foreignCollection, let foreignKey, let localKey, let method):
-                guard case .schema(let collection, let alias) = foreignCollection else {
-                    throw FluentMongoError.unsupportedJoin
-                }
-                
+            case .join(let schema, let alias, let method, let foreignKey, let localKey):
                 switch method {
-                case .left, .outer:
+                case .left:
                     stages.append(lookup(
-                        from: collection,
+                        from: schema,
                         localField: try localKey.makeProjectedMongoPath(),
                         foreignField: try foreignKey.makeMongoPath(),
-                        as: alias ?? collection
+                        as: alias ?? schema
                     ))
                 case .inner:
                     stages.append(lookup(
-                        from: collection,
+                        from: schema,
                         localField: try localKey.makeProjectedMongoPath(),
                         foreignField: try foreignKey.makeMongoPath(),
-                        as: alias ?? collection
+                        as: alias ?? schema
                     ))
 
                     stages.append(AggregateBuilderStage(document: [
-                        "$unwind": "$\(alias ?? collection)"
+                        "$unwind": "$\(alias ?? schema)"
                     ]))
-                case .right, .custom:
+                case .custom:
                     fatalError()
                 }
             case .custom:
@@ -128,39 +94,12 @@ extension DatabaseQuery {
             }
         }
         
-        return stages
-    }
-}
-
-private struct FluentMongoJoinedRow: DatabaseRow {
-    let document: Document
-    let decoder: BSONDecoder
-    let schema: String
-    let aliases: [String: (schema: String, key: String)]
-
-    var description: String {
-        self.document.debugDescription
-    }
-
-    func contains(field: FieldKey) -> Bool {
-        self.primitive(field: field) != nil
-    }
-
-    func decode<T>(field: FieldKey, as type: T.Type, for database: Database) throws -> T
-        where T : Decodable
-    {
-        try self.decoder.decode(
-            type,
-            fromPrimitive: self.primitive(field: field) ?? Null()
-        )
-    }
-
-    private func primitive(field: FieldKey) -> Primitive? {
-        let key = field.makeMongoKey()
-        if let (schema, field) = self.aliases[key] {
-            return self.document[schema][field]
-        } else {
-            return self.document[self.schema][key]
+        let filter = try makeMongoDBFilter(aggregate: true)
+        
+        if !filter.isEmpty {
+            stages.append(match(filter))
         }
+        
+        return stages
     }
 }

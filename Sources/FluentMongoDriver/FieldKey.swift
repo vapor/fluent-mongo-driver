@@ -18,7 +18,27 @@ extension FieldKey {
 extension DatabaseQuery.Field {
     func makeMongoPath() throws -> String {
         switch self {
-        case .field(let path, _, _):
+        case .field(let field, _):
+            return field.makeMongoKey()
+        case .custom:
+            throw FluentMongoError.unsupportedField
+        }
+    }
+
+    func makeProjectedMongoPath() throws -> String {
+        switch self {
+        case .field(let field, let schema):
+            return "\(schema).\(field.makeMongoKey())"
+        case .custom:
+            throw FluentMongoError.unsupportedField
+        }
+    }
+}
+
+extension DatabaseQuery.Filter.Field {
+    func makeMongoPath() throws -> String {
+        switch self {
+        case .path(let path, _):
             return path.map { $0.makeMongoKey() }.joined(separator: ".")
         case .custom:
             throw FluentMongoError.unsupportedField
@@ -27,15 +47,9 @@ extension DatabaseQuery.Field {
     
     func makeProjectedMongoPath() throws -> String {
         switch self {
-        case .field(let path, let schema, let alias):
-            if let alias = alias {
-                return alias
-            } else if let schema = schema {
-                let path = path.map { $0.makeMongoKey() }.joined(separator: ".")
-                return "\(schema).\(path)"
-            } else {
-                return try makeMongoPath()
-            }
+        case .path(let path, let schema):
+            let path = path.map { $0.makeMongoKey() }.joined(separator: ".")
+            return "\(schema).\(path)"
         case .custom:
             throw FluentMongoError.unsupportedField
         }
