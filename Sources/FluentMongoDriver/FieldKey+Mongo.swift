@@ -7,8 +7,6 @@ extension FieldKey {
             return "_id"
         case .string(let name):
             return name
-        case .prefixed(let prefix, let key):
-            return prefix + key.makeMongoKey()
         case .aggregate:
             fatalError("Unsupported field key: \(self).")
         }
@@ -18,8 +16,8 @@ extension FieldKey {
 extension DatabaseQuery.Field {
     func makeMongoPath() throws -> String {
         switch self {
-        case .field(let field, _):
-            return field.makeMongoKey()
+        case .field(let path, _):
+            return path.map { $0.makeMongoKey() }.joined(separator: ".")
         case .custom:
             throw FluentMongoError.unsupportedField
         }
@@ -27,8 +25,8 @@ extension DatabaseQuery.Field {
 
     func makeProjectedMongoPath() throws -> String {
         switch self {
-        case .field(let field, let schema):
-            return "\(schema).\(field.makeMongoKey())"
+        case .field(let path, let schema):
+            return "\(schema).\(path.map { $0.makeMongoKey() }.joined(separator: "."))"
         case .custom:
             throw FluentMongoError.unsupportedField
         }

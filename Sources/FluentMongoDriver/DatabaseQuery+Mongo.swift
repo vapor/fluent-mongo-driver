@@ -41,32 +41,8 @@ extension DatabaseQuery {
     }
     
     internal func makeValueDocuments() throws -> [Document] {
-        let keys = try fields.map { field -> String in
-            switch field {
-            case .field(let key, _):
-                return key.makeMongoKey()
-            case .custom:
-                throw FluentMongoError.unsupportedField
-            }
-        }
-        
-        return try input.map { entity -> Document in
-            assert(entity.count == keys.count, "The entity's keys.count != values.count")
-            
-            var document = Document()
-            
-            for index in 0..<keys.count {
-                let key = keys[index]
-                let value = try entity[index].makePrimitive()
-                
-                if key == "_id" {
-                    document.insert(value, forKey: "_id", at: 0)
-                } else {
-                    document.appendValue(value, forKey: key)
-                }
-            }
-            
-            return document
+        try self.input.map { entity -> Document in
+            try entity.makePrimitive() as! Document
         }
     }
 }

@@ -16,7 +16,7 @@ extension DatabaseQuery.Value {
             var document = Document()
             
             for (key, value) in dict {
-                document[key] = try value.makePrimitive()
+                document[key.makeMongoKey()] = try value.makePrimitive()
             }
             
             return document
