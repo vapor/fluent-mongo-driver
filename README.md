@@ -1,6 +1,6 @@
 <p align="center">
     <img 
-        src="https://user-images.githubusercontent.com/1342803/59065097-ec656880-8879-11e9-9e80-2e393dc313c1.png" 
+        src="https://user-images.githubusercontent.com/1342803/75594059-69aeba00-5a55-11ea-90aa-af9f41ad53b8.png" 
         height="64" 
         alt="FluentMongoDriver"
     >
