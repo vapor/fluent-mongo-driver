@@ -13,11 +13,11 @@ struct _MongoDBAggregateResponse: DatabaseOutput {
         self
     }
     
-    func contains(_ field: FieldKey) -> Bool {
-        field == .aggregate
+    func contains(_ path: [FieldKey]) -> Bool {
+        path[0] == .aggregate
     }
     
-    func decode<T>(_ field: FieldKey, as type: T.Type) throws -> T
+    func decode<T>(_ path: [FieldKey], as type: T.Type) throws -> T
         where T: Decodable
     {
         try self.decoder.decode(type, fromPrimitive: value)

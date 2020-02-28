@@ -20,25 +20,28 @@ private struct _FluentMongoOutput: DatabaseOutput {
         _FluentMongoOutput(document: self.document, decoder: self.decoder, schema: schema)
     }
 
-    func contains(_ field: FieldKey) -> Bool {
-        self.primitive(field: field) != nil
+    func contains(_ path: [FieldKey]) -> Bool {
+        self.primitive(path) != nil
     }
 
-    func decode<T>(_ field: FieldKey, as type: T.Type) throws -> T
+    func decode<T>(_ path: [FieldKey], as type: T.Type) throws -> T
         where T : Decodable
     {
         try self.decoder.decode(
             type,
-            fromPrimitive: self.primitive(field: field) ?? Null()
+            fromPrimitive: self.primitive(path) ?? Null()
         )
     }
 
-    private func primitive(field: FieldKey) -> Primitive? {
-        let key = field.makeMongoKey()
+    private func primitive(_ path: [FieldKey]) -> Primitive? {
+        var current: Primitive? = self.document
         if let schema = self.schema {
-            return self.document[schema][key]
-        } else {
-            return self.document[key]
+            current = current[schema]
         }
+        for field in path {
+            let key = field.makeMongoKey()
+            current = current[key]
+        }
+        return current
     }
 }
