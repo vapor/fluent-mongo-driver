@@ -65,7 +65,7 @@ struct FluentMongoDriver: DatabaseDriver {
 }
 
 public protocol MongoDatabaseRepresentable {
-    var mongoKitten: MongoDatabase { get }
+    var raw: MongoDatabase { get }
 }
 
 struct FluentMongoConfiguration: DatabaseConfiguration {
