@@ -10,10 +10,7 @@ extension DatabaseID {
 
 struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
     let cluster: MongoCluster
-    let mongoKitten: MongoDatabase
-    var raw: MongoDatabase {
-        mongoKitten.hopped(to: context.eventLoop)
-    }
+    let raw: MongoDatabase
     let context: DatabaseContext
 
     func execute(
@@ -39,7 +36,7 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
     }
 
     func execute(enum: DatabaseEnum) -> EventLoopFuture<Void> {
-        self.mongoKitten.eventLoop.makeSucceededFuture(())
+        self.raw.eventLoop.makeSucceededFuture(())
     }
 
     func withConnection<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
@@ -51,7 +48,7 @@ struct FluentMongoDriver: DatabaseDriver {
     func makeDatabase(with context: DatabaseContext) -> Database {
         FluentMongoDatabase(
             cluster: self.cluster,
-            mongoKitten: self.cluster[self.targetDatabase],
+            raw: self.cluster[self.targetDatabase].hopped(to: context.eventLoop),
             context: context
         )
     }

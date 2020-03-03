@@ -29,7 +29,7 @@ extension FluentMongoDatabase {
             return cluster.next(for: .init(writable: true)).flatMap { connection in
                 return connection.executeCodable(
                     command,
-                    namespace: MongoNamespace(to: "$cmd", inDatabase: self.mongoKitten.name),
+                    namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                     sessionId: nil
                 )
             }.decode(DeleteReply.self).flatMapThrowing { reply in

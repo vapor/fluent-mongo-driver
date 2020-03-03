@@ -10,7 +10,7 @@ extension FluentMongoDatabase {
         do {
             let documents = try query.makeValueDocuments()
             
-            return self.mongoKitten[query.schema]
+            return self.raw[query.schema]
                 .insertMany(documents)
                 .flatMapThrowing { reply in
                     guard reply.ok == 1, reply.insertCount == documents.count else {

@@ -61,7 +61,7 @@ extension FluentMongoDatabase {
             return cluster.next(for: .init(writable: false)).flatMap { connection in
                 return connection.executeCodable(
                     count,
-                    namespace: MongoNamespace(to: "$cmd", inDatabase: self.mongoKitten.name),
+                    namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                     sessionId: nil
                 )
             }.decode(CountReply.self).flatMapThrowing { reply in
@@ -82,7 +82,7 @@ extension FluentMongoDatabase {
         do {
             let field = try field.makeMongoPath()
             let condition = try query.makeMongoDBFilter(aggregate: false)
-            let find = self.mongoKitten[query.schema]
+            let find = self.raw[query.schema]
                 .find(condition)
                 .project([
                     "n": [

@@ -9,7 +9,7 @@ extension FluentMongoDatabase {
     ) -> EventLoopFuture<Void> {
         do {
             let condition = try query.makeMongoDBFilter(aggregate: false)
-            let find = self.mongoKitten[query.schema].find(condition)
+            let find = self.raw[query.schema].find(condition)
             
             switch query.limits.first {
             case .count(let limit):
