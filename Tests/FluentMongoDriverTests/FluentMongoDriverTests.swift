@@ -63,7 +63,7 @@ final class FluentMongoDriverTests: XCTestCase {
             ?? "localhost"
         try! self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
         // Drop existing tables.
-        try! (self.db as! MongoDatabaseRepresentable).raw.drop().wait()
+        try! (self.db as! MongoDatabaseRepresentable).mongoKitten.drop().wait()
     }
     
     override func tearDown() {

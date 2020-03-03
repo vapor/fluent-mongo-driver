@@ -49,7 +49,7 @@ extension FluentMongoDatabase {
                     let createdIndex = cluster.next(for: .init(writable: false)).flatMap { connection in
                         return connection.executeCodable(
                             createIndexes,
-                            namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
+                            namespace: MongoNamespace(to: "$cmd", inDatabase: self.mongoKitten.name),
                             sessionId: nil
                         )
                     }.map { _ in }
@@ -67,6 +67,6 @@ extension FluentMongoDatabase {
     }
 
     private func delete(schema: DatabaseSchema) -> EventLoopFuture<Void> {
-        self.raw[schema.schema].drop()
+        self.mongoKitten[schema.schema].drop()
     }
 }

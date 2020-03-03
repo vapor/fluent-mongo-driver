@@ -10,7 +10,7 @@ extension FluentMongoDatabase {
         do {
             let stages = try query.makeAggregatePipeline()
             let decoder = BSONDecoder()
-            return self.raw[query.schema].aggregate(stages).forEach { document in
+            return self.mongoKitten[query.schema].aggregate(stages).forEach { document in
                 onOutput(document.databaseOutput(using: decoder))
             }
         } catch {
@@ -24,7 +24,7 @@ extension FluentMongoDatabase {
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
-            return self.raw[query.schema].aggregate(stages).count().map { count in
+            return self.mongoKitten[query.schema].aggregate(stages).count().map { count in
                 let reply = _MongoDBAggregateResponse(value: count, decoder: BSONDecoder())
                 onOutput(reply)
             }
