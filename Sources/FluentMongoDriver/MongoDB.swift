@@ -48,7 +48,7 @@ struct FluentMongoDriver: DatabaseDriver {
     func makeDatabase(with context: DatabaseContext) -> Database {
         FluentMongoDatabase(
             cluster: self.cluster,
-            raw: self.cluster[self.targetDatabase],
+            raw: self.cluster[self.targetDatabase].hopped(to: context.eventLoop),
             context: context
         )
     }
