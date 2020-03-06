@@ -32,7 +32,7 @@ extension FluentMongoDatabase {
                     namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                     sessionId: nil
                 )
-            }.decode(DeleteReply.self).flatMapThrowing { reply in
+            }.decode(DeleteReply.self).hop(to: eventLoop).flatMapThrowing { reply in
                 let reply = _MongoDBAggregateResponse(
                     value: reply.deletes,
                     decoder: BSONDecoder()

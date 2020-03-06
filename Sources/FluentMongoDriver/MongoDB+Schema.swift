@@ -52,7 +52,7 @@ extension FluentMongoDatabase {
                             namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                             sessionId: nil
                         )
-                    }.map { _ in }
+                    }.hop(to: eventLoop).map { _ in }
 
                     futures.append(createdIndex)
                 case .foreignKey, .custom:
