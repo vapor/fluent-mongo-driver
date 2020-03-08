@@ -64,7 +64,7 @@ extension FluentMongoDatabase {
                     namespace: MongoNamespace(to: "$cmd", inDatabase: self.raw.name),
                     sessionId: nil
                 )
-            }.decode(CountReply.self).flatMapThrowing { reply in
+            }.decode(CountReply.self).hop(to: eventLoop).flatMapThrowing { reply in
                 let reply = _MongoDBAggregateResponse(value: reply.count, decoder: BSONDecoder())
                 onOutput(reply)
             }
