@@ -52,7 +52,9 @@ final class FluentMongoDriverTests: XCTestCase {
         self.benchmarker.database
     }
     
-    override func setUp() {
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        
         XCTAssert(isLoggingConfigured)
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         self.threadPool = NIOThreadPool(numberOfThreads: 1)
@@ -61,15 +63,17 @@ final class FluentMongoDriverTests: XCTestCase {
         let hostname = getenv("MONGO_HOSTNAME")
             .flatMap { String(cString: $0) }
             ?? "localhost"
-        try! self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
+        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
         // Drop existing tables.
-        try! (self.db as! MongoDatabaseRepresentable).raw.drop().wait()
+        try (self.db as! MongoDatabaseRepresentable).raw.drop().wait()
     }
     
-    override func tearDown() {
+    override func tearDownWithError() throws {
         self.dbs.shutdown()
-        try! self.threadPool.syncShutdownGracefully()
-        try! self.eventLoopGroup.syncShutdownGracefully()
+        try self.threadPool.syncShutdownGracefully()
+        try self.eventLoopGroup.syncShutdownGracefully()
+        
+        try super.tearDownWithError()
     }
 }
 
