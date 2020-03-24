@@ -17,8 +17,8 @@ extension DatabaseQuery.Filter.Method {
             case (true, true):
                 return "$lte"
             }
-        case .subset:
-            return "$in"
+        case .subset(let inverse):
+            return inverse ? "$nin" : "$in"
         case .custom, .contains:
             throw FluentMongoError.unsupportedOperator
         }
