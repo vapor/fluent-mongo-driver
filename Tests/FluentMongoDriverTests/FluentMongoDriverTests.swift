@@ -71,8 +71,9 @@ final class FluentMongoDriverTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(range.start, sameRange.start)
-        XCTAssertEqual(range.end, sameRange.end)
+        // Dates are doubles, which are not 100% precise. So this fails on Linux.
+        XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
+        XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
     }
     
     var benchmarker: FluentBenchmarker {
