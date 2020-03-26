@@ -1,6 +1,6 @@
 import FluentKit
 
-extension Model {
+extension Fields {
     public typealias SiblingField<To> = SiblingFieldProperty<Self, To>
         where To: Model
 }
