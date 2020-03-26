@@ -4,6 +4,23 @@ import FluentBenchmark
 import FluentMongoDriver
 import XCTest
 
+public final class Entity: Model {
+    public static let schema = "entities"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "name")
+    public var name: String
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+
 final class FluentMongoDriverTests: XCTestCase {
     func testAggregate() throws {
         try self.benchmarker.testAggregate(max: false)
@@ -41,6 +58,20 @@ final class FluentMongoDriverTests: XCTestCase {
     func testTimestamp() throws { try self.benchmarker.testTimestamp() }
 //    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
+    
+    func testObjectId() throws {
+        let entity = Entity(name: "test")
+        
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
+        
+        try entity.save(on: db).wait()
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 1)
+        
+        XCTAssertNotNil(try Entity.find(entity.id, on: db).wait())
+        
+        try entity.delete(on: db).wait()
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
+    }
     
     var benchmarker: FluentBenchmarker {
         return .init(databases: self.dbs)
