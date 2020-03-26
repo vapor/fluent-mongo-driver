@@ -4,6 +4,26 @@ import FluentBenchmark
 import FluentMongoDriver
 import XCTest
 
+final class DateRange: Model {
+    static let schema = "date-range"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "start")
+    var start: Date
+    
+    @Field(key: "end")
+    var end: Date
+    
+    init() {}
+    
+    init(from: Date, to: Date) {
+        self.start = from
+        self.end = to
+    }
+}
+
 final class FluentMongoDriverTests: XCTestCase {
     func testAggregate() throws {
         try self.benchmarker.testAggregate(max: false)
@@ -41,6 +61,19 @@ final class FluentMongoDriverTests: XCTestCase {
     func testTimestamp() throws { try self.benchmarker.testTimestamp() }
 //    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
+    
+    func testDate() throws {
+        let range = DateRange(from: Date(), to: Date())
+        try range.save(on: db).wait()
+        
+        guard let sameRange = try DateRange.find(range.id, on: db).wait() else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(range.start, sameRange.start)
+        XCTAssertEqual(range.end, sameRange.end)
+    }
     
     var benchmarker: FluentBenchmarker {
         return .init(databases: self.dbs)
