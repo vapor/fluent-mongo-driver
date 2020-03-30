@@ -24,6 +24,23 @@ final class DateRange: Model {
     }
 }
 
+public final class Entity: Model {
+    public static let schema = "entities"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "name")
+    public var name: String
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+
 final class FluentMongoDriverTests: XCTestCase {
     func testAggregate() throws {
         try self.benchmarker.testAggregate(max: false)
@@ -74,6 +91,20 @@ final class FluentMongoDriverTests: XCTestCase {
         // Dates are doubles, which are not 100% precise. So this fails on Linux.
         XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
         XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
+    }
+  
+    func testObjectId() throws {
+        let entity = Entity(name: "test")
+        
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
+        
+        try entity.save(on: db).wait()
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 1)
+        
+        XCTAssertNotNil(try Entity.find(entity.id, on: db).wait())
+        
+        try entity.delete(on: db).wait()
+        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
     }
     
     var benchmarker: FluentBenchmarker {
