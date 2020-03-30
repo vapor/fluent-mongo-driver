@@ -4,6 +4,26 @@ import FluentBenchmark
 import FluentMongoDriver
 import XCTest
 
+final class DateRange: Model {
+    static let schema = "date-range"
+    
+    @ID(key: .id)
+    var id: UUID?
+    
+    @Field(key: "start")
+    var start: Date
+    
+    @Field(key: "end")
+    var end: Date
+    
+    init() {}
+    
+    init(from: Date, to: Date) {
+        self.start = from
+        self.end = to
+    }
+}
+
 public final class Entity: Model {
     public static let schema = "entities"
     
@@ -59,6 +79,20 @@ final class FluentMongoDriverTests: XCTestCase {
 //    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
     
+    func testDate() throws {
+        let range = DateRange(from: Date(), to: Date())
+        try range.save(on: db).wait()
+        
+        guard let sameRange = try DateRange.find(range.id, on: db).wait() else {
+            XCTFail()
+            return
+        }
+        
+        // Dates are doubles, which are not 100% precise. So this fails on Linux.
+        XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
+        XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
+    }
+  
     func testObjectId() throws {
         let entity = Entity(name: "test")
         
