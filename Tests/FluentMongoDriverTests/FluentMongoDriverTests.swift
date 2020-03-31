@@ -79,6 +79,35 @@ final class FluentMongoDriverTests: XCTestCase {
 //    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
     
+    func testJoinLimit() throws {
+        let migration = SolarSystem()
+        try migration.prepare(on: db).wait()
+        defer {
+            _ = try? migration.revert(on: db).wait()
+        }
+        
+        do {
+            let planets = try Planet.query(on: db).all().wait()
+            
+            guard planets.count > 1, let lastId = planets.last?.id else {
+                XCTFail("Invalid dataset for test")
+                return
+            }
+
+            let planet = try Planet.query(on: db)
+                .join(Star.self, on: \Planet.$star.$id == \Star.$id)
+                .filter(\.$id == lastId)
+                .first()
+                .wait()
+            
+            XCTAssertEqual(planet?.id, lastId)
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        
+    }
+    
     func testDate() throws {
         let range = DateRange(from: Date(), to: Date())
         try range.save(on: db).wait()
