@@ -41,6 +41,50 @@ public final class Entity: Model {
     }
 }
 
+public final class DocumentStorage: Model {
+    public static let schema = "documentstorages"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "document")
+    public var document: Document
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, document: Document) {
+        self.id = id
+        self.document = document
+    }
+}
+
+public final class Nested: Fields {
+    @Field(key: "value")
+    public var value: String
+    
+    public init() {}
+    public init(value: String) {
+        self.value = value
+    }
+}
+
+public final class NestedStorage: Model {
+    public static let schema = "documentstorages"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "nested")
+    public var nested: Nested
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, nested: Nested) {
+        self.id = id
+        self.nested = nested
+    }
+}
+
 final class FluentMongoDriverTests: XCTestCase {
     func testAggregate() throws {
         try self.benchmarker.testAggregate(max: false)
@@ -118,6 +162,30 @@ final class FluentMongoDriverTests: XCTestCase {
         // Dates are doubles, which are not 100% precise. So this fails on Linux.
         XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
         XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
+    }
+    
+    func testNestedDocuments() throws {
+        let doc = DocumentStorage(document: ["key": true])
+        try doc.save(on: db).wait()
+        
+        guard let sameDoc = try DocumentStorage.query(on: db).filter("document.key", .equal, true).first().wait() else {
+            XCTFail("Query failed to find the saved entity")
+            return
+        }
+        
+        XCTAssertEqual(sameDoc.document["key"] as? Bool, true)
+    }
+    
+    func testNestedFields() throws {
+        let doc = NestedStorage(nested: .init(value: "hello"))
+        try doc.save(on: db).wait()
+        
+        guard let sameDoc = try NestedStorage.query(on: db).filter("nested.value", .equal, "hello").first().wait() else {
+            XCTFail("Query failed to find the saved entity")
+            return
+        }
+        
+        XCTAssertEqual(sameDoc.nested.value, "hello")
     }
   
     func testObjectId() throws {
