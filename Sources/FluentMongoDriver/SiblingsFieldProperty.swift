@@ -10,14 +10,14 @@ public final class SiblingsFieldProperty<From, To>
     where From: Fields, To: Model
 {
     public let key: FieldKey
-    public var value: [To]?
-    public var identifiers: [To.IDValue]?
+    public var value: [To.IDValue]?
+    public fileprivate(set) var models: [To]?
     
     public var projectedValue: SiblingsFieldProperty<From, To> {
         self
     }
 
-    public var wrappedValue: [To] {
+    public var wrappedValue: [To.IDValue] {
         get {
             guard let value = self.value else {
                 fatalError("Cannot access field before it is initialized or fetched: \(self.key)")
@@ -34,7 +34,7 @@ public final class SiblingsFieldProperty<From, To>
     }
 
     public func query(on database: Database) -> QueryBuilder<To> {
-        guard let identifiers = self.identifiers else {
+        guard let identifiers = self.value else {
             fatalError("Cannot query siblings relation from unsaved model.")
         }
 
@@ -45,8 +45,7 @@ public final class SiblingsFieldProperty<From, To>
 
 extension SiblingsFieldProperty: PropertyProtocol {
     public typealias Model = From
-    public typealias Value = [To]
-    
+    public typealias Value = [To.IDValue]
 }
 
 extension SiblingsFieldProperty: FieldProtocol { }
@@ -59,7 +58,7 @@ extension SiblingsFieldProperty: Relation {
 
     public func load(on database: Database) -> EventLoopFuture<Void> {
         self.query(on: database).all().map {
-            self.value = $0
+            self.models = $0
         }
     }
 }
@@ -69,17 +68,17 @@ extension SiblingsFieldProperty: AnyProperty {
     public var path: [FieldKey] { [self.key] }
 
     public func input(to input: inout DatabaseInput) {
-        input.values[self.key] = identifiers.map { identifiers in
+        input.values[self.key] = value.map { identifiers in
             return .bind(identifiers)
         }
     }
 
     public func output(from output: DatabaseOutput) throws {
         if output.contains([self.key]) {
-            self.identifiers = nil
+            self.value = nil
             
             do {
-                self.identifiers = try output.decode(self.key, as: [To.IDValue].self)
+                self.value = try output.decode(self.key, as: [To.IDValue].self)
             } catch {
                 throw FluentError.invalidField(
                     name: self.key.description,
@@ -91,14 +90,14 @@ extension SiblingsFieldProperty: AnyProperty {
     }
 
     public func encode(to encoder: Encoder) throws {
-        if let identifiers = self.identifiers {
+        if let identifiers = self.value {
             var container = encoder.singleValueContainer()
             try container.encode(identifiers)
         }
     }
 
     public func decode(from decoder: Decoder) throws {
-        self.identifiers = try [To.IDValue](from: decoder)
+        self.value = try [To.IDValue](from: decoder)
     }
 }
 
@@ -134,13 +133,13 @@ private struct SiblingsEagerLoader<From, To>: EagerLoader
 
     func run(models: [From], on database: Database) -> EventLoopFuture<Void> {
         let done = models.map { model -> EventLoopFuture<Void> in
-            guard let ids = model[keyPath: self.relationKey].identifiers else {
-                model[keyPath: self.relationKey].value = []
+            guard let ids = model[keyPath: self.relationKey].value else {
+                model[keyPath: self.relationKey].models = []
                 return database.eventLoop.makeSucceededFuture(())
             }
             
             return To.query(on: database).filter(\._$id ~~ ids).all().map { results in
-                model[keyPath: self.relationKey].value = results
+                model[keyPath: self.relationKey].models = results
             }
         }
         
@@ -155,8 +154,8 @@ private struct ThroughSiblingsEagerLoader<From, Through, Loader>: EagerLoader
     let loader: Loader
 
     func run(models: [From], on database: Database) -> EventLoopFuture<Void> {
-        let throughs = models.flatMap {
-            $0[keyPath: self.relationKey].value!
+        let throughs = models.flatMap { model in
+            return model[keyPath: self.relationKey].models!
         }
         return self.loader.run(models: throughs, on: database)
     }

@@ -4,23 +4,56 @@ import FluentBenchmark
 import FluentMongoDriver
 import XCTest
 
-final class DateRange: Model {
-    static let schema = "date-range"
+public final class DateRange: Model {
+    public static let schema = "date-range"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "start")
-    var start: Date
+    public var start: Date
     
     @Field(key: "end")
-    var end: Date
+    public var end: Date
     
-    init() {}
+    public init() {}
     
-    init(from: Date, to: Date) {
+    public init(from: Date, to: Date) {
         self.start = from
         self.end = to
+    }
+}
+
+public final class CustomIDEntity: Model {
+    public static let schema = "entities"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "name")
+    public var name: String
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+
+public final class NestedSiblings: Model {
+    public static let schema = "parent"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @SiblingsField<DateRange>(key: "dates")
+    public var dates: [UUID]
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, dates: [UUID]) {
+        self.dates = dates
     }
 }
 
@@ -71,8 +104,52 @@ final class FluentMongoDriverTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(range.start, sameRange.start)
-        XCTAssertEqual(range.end, sameRange.end)
+        // Dates are doubles, which are not 100% precise. So this fails on Linux.
+        XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
+        XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
+    }
+    
+    func testObjectId() throws {
+        let entity = CustomIDEntity(name: "test")
+        
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 0)
+        
+        try entity.save(on: db).wait()
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 1)
+        
+        XCTAssertNotNil(try CustomIDEntity.find(entity.id, on: db).wait())
+        
+        try entity.delete(on: db).wait()
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 0)
+    }
+    
+    func testSiblingsField() throws {
+        let range = 0..<5
+        let siblings = try range.map { _ -> DateRange in
+            let range = DateRange(from: Date(), to: Date())
+            try range.save(on: db).wait()
+            return range
+        }
+        
+        let entity = NestedSiblings(dates: siblings.compactMap(\.id))
+        try entity.save(on: db).wait()
+        
+        // This will work as long as there's one entity
+        let _sibling = try NestedSiblings.query(on: db).with(\.$dates).first().wait()
+        
+        guard let sibling = _sibling else {
+            XCTFail("No entities found, although there was one saved")
+            return
+        }
+        
+        guard let models = sibling.$dates.models else {
+            XCTFail("No models preresolved")
+            return
+        }
+        
+        for i in range {
+            XCTAssertEqual(models[i].id, siblings[i].id)
+        }
     }
     
     var benchmarker: FluentBenchmarker {
