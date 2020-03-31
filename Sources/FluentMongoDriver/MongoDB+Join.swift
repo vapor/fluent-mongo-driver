@@ -38,24 +38,6 @@ extension DatabaseQuery {
     func makeAggregatePipeline() throws -> [AggregateBuilderStage] {
         var stages = [AggregateBuilderStage]()
         
-        switch limits.first {
-        case .count(let n):
-            stages.append(limit(n))
-        case .custom:
-            throw FluentMongoError.unsupportedCustomLimit
-        case .none:
-            break
-        }
-        
-        switch offsets.first {
-        case .count(let offset):
-            stages.append(skip(offset))
-        case .custom:
-            throw FluentMongoError.unsupportedCustomLimit
-        case .none:
-            break
-        }
-        
         stages.append(AggregateBuilderStage(document: [
             "$replaceRoot": [
                 "newRoot": [
@@ -98,6 +80,24 @@ extension DatabaseQuery {
         
         if !filter.isEmpty {
             stages.append(match(filter))
+        }
+        
+        switch offsets.first {
+        case .count(let offset):
+            stages.append(skip(offset))
+        case .custom:
+            throw FluentMongoError.unsupportedCustomLimit
+        case .none:
+            break
+        }
+        
+        switch limits.first {
+        case .count(let n):
+            stages.append(limit(n))
+        case .custom:
+            throw FluentMongoError.unsupportedCustomLimit
+        case .none:
+            break
         }
         
         return stages
