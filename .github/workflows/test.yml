@@ -5,10 +5,7 @@ jobs:
   fluent-mongo-driver_macos:
     runs-on: macos-latest
     steps:
-    - run: ls -la /Applications/
-    - run: sudo xcode-select -p
-    - run: xcode-select -p
-    - run: sudo xcode-select -s /Applications/Xcode_11.4_beta.app/Contents/Developer
+    - run: sudo xcode-select -s /Applications/Xcode_11.4.app/Contents/Developer
     - run: brew tap mongodb/brew
     - run: brew install mongodb-community
     - run: brew services start mongodb/brew/mongodb-community
