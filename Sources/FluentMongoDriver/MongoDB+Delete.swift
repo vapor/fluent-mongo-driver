@@ -26,6 +26,7 @@ extension FluentMongoDatabase {
                 fromCollection: query.schema
             )
             
+            logger.debug("fluent-mongo delete \(deleteLimit) filter=\(filter)")
             return cluster.next(for: .init(writable: true)).flatMap { connection in
                 return connection.executeCodable(
                     command,
