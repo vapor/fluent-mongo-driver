@@ -47,13 +47,13 @@ public final class NestedSiblings: Model {
     @ID(custom: .id)
     public var id: ObjectId?
 
-    @SiblingsField<DateRange>(key: "dates")
-    public var dates: [UUID]
+    @SiblingsField(key: "dates")
+    public var dates: [DateRange]
 
     public init() { }
 
     public init(id: ObjectId? = nil, dates: [UUID]) {
-        self.dates = dates
+        self.$dates.identifiers = dates
     }
 }
 
@@ -142,13 +142,8 @@ final class FluentMongoDriverTests: XCTestCase {
             return
         }
         
-        guard let models = sibling.$dates.models else {
-            XCTFail("No models preresolved")
-            return
-        }
-        
         for i in range {
-            XCTAssertEqual(models[i].id, siblings[i].id)
+            XCTAssertEqual(sibling.dates[i].id, siblings[i].id)
         }
     }
     
