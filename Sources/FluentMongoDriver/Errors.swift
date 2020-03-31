@@ -23,6 +23,7 @@ enum FluentMongoError: Error, DatabaseError {
     case missingHosts, noTargetDatabaseSpecified, unsupportedJoin, unsupportedOperator, invalidIndexKey
     case unsupportedField, unsupportedDefaultValue, insertFailed, unsupportedFilter
     case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction, unsupportedCustomSort, unsupportedCustomAggregate
+    case notMongoDB, fileNotFound
 }
 
 
