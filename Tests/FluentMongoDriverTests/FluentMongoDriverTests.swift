@@ -104,8 +104,6 @@ final class FluentMongoDriverTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-        
-        
     }
     
     func testDate() throws {
