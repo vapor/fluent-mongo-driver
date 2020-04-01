@@ -43,7 +43,6 @@ public final class CustomIDEntity: Model {
 
 public final class NestedSiblings: Model {
     public static let schema = "parent"
-    
     @ID(custom: .id)
     public var id: ObjectId?
 
@@ -54,6 +53,46 @@ public final class NestedSiblings: Model {
 
     public init(id: ObjectId? = nil, dates: [UUID]) {
         self.$dates.identifiers = dates
+    }
+}
+
+public final class DocumentStorage: Model {
+    public static let schema = "documentstorages"
+    @Field(key: "document")
+    public var document: Document
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, document: Document) {
+        self.id = id
+        self.document = document
+    }
+}
+
+public final class Nested: Fields {
+    @Field(key: "value")
+    public var value: String
+    
+    public init() {}
+    public init(value: String) {
+        self.value = value
+    }
+}
+
+public final class NestedStorage: Model {
+    public static let schema = "documentstorages"
+    
+    @ID(custom: .id)
+    public var id: ObjectId?
+
+    @Field(key: "nested")
+    public var nested: Nested
+
+    public init() { }
+
+    public init(id: ObjectId? = nil, nested: Nested) {
+        self.id = id
+        self.nested = nested
     }
 }
 
@@ -95,6 +134,33 @@ final class FluentMongoDriverTests: XCTestCase {
 //    func testTransaction() throws { try self.benchmarker.testTransaction() }
     func testUnique() throws { try self.benchmarker.testUnique() }
     
+    func testJoinLimit() throws {
+        let migration = SolarSystem()
+        try migration.prepare(on: db).wait()
+        defer {
+            _ = try? migration.revert(on: db).wait()
+        }
+        
+        do {
+            let planets = try Planet.query(on: db).all().wait()
+            
+            guard planets.count > 1, let lastId = planets.last?.id else {
+                XCTFail("Invalid dataset for test")
+                return
+            }
+
+            let planet = try Planet.query(on: db)
+                .join(Star.self, on: \Planet.$star.$id == \Star.$id)
+                .filter(\.$id == lastId)
+                .first()
+                .wait()
+            
+            XCTAssertEqual(planet?.id, lastId)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testDate() throws {
         let range = DateRange(from: Date(), to: Date())
         try range.save(on: db).wait()
@@ -107,6 +173,30 @@ final class FluentMongoDriverTests: XCTestCase {
         // Dates are doubles, which are not 100% precise. So this fails on Linux.
         XCTAssert(abs(range.start.timeIntervalSince(sameRange.start)) < 0.1)
         XCTAssert(abs(range.end.timeIntervalSince(sameRange.end)) < 0.1)
+    }
+    
+    func testNestedDocuments() throws {
+        let doc = DocumentStorage(document: ["key": true])
+        try doc.save(on: db).wait()
+        
+        guard let sameDoc = try DocumentStorage.query(on: db).filter("document.key", .equal, true).first().wait() else {
+            XCTFail("Query failed to find the saved entity")
+            return
+        }
+        
+        XCTAssertEqual(sameDoc.document["key"] as? Bool, true)
+    }
+    
+    func testNestedFields() throws {
+        let doc = NestedStorage(nested: .init(value: "hello"))
+        try doc.save(on: db).wait()
+        
+        guard let sameDoc = try NestedStorage.query(on: db).filter("nested.value", .equal, "hello").first().wait() else {
+            XCTFail("Query failed to find the saved entity")
+            return
+        }
+        
+        XCTAssertEqual(sameDoc.nested.value, "hello")
     }
     
     func testObjectId() throws {

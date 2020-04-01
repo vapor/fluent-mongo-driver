@@ -10,6 +10,7 @@ extension FluentMongoDatabase {
         do {
             let documents = try query.makeValueDocuments()
             
+            logger.debug("fluent-mongo insert entities=\(documents)")
             return self.raw[query.schema]
                 .insertMany(documents)
                 .flatMapThrowing { reply in

@@ -25,6 +25,7 @@ extension FluentMongoDatabase {
             }
             
             let command = UpdateCommand(updates: updates, inCollection: query.schema)
+            logger.debug("fluent-mongo update filter=\(filter) updates=\(update)")
             return cluster.next(for: .init(writable: true)).flatMap { connection in
                 return connection.executeCodable(
                     command,
