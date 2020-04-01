@@ -202,6 +202,31 @@ final class FluentMongoDriverTests: XCTestCase {
         XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
     }
     
+    func testGridFS() throws {
+        struct JSON: Codable, Equatable {
+            let name: String
+        }
+        
+        let writtenEntity = JSON(name: "Hello")
+        let writtenData = try JSONEncoder().encode(writtenEntity)
+        var buffer = ByteBufferAllocator().buffer(capacity: writtenData.count)
+        buffer.writeBytes(writtenData)
+        let writtenFile = try GridFSFile.upload(buffer, on: db).wait()
+        
+        guard let readBuffer = try GridFSFile.read(writtenFile._id, on: db).wait() else {
+            XCTFail("File not found")
+            return
+        }
+        
+        guard let readBytes = readBuffer.getBytes(at: 0, length: writtenData.count) else {
+            XCTFail("Mismatching data")
+            return
+        }
+        
+        let readEntity = try JSONDecoder().decode(JSON.self, from: Data(readBytes))
+        XCTAssertEqual(writtenEntity, readEntity)
+    }
+    
     var benchmarker: FluentBenchmarker {
         return .init(databases: self.dbs)
     }
@@ -210,6 +235,9 @@ final class FluentMongoDriverTests: XCTestCase {
     var dbs: Databases!
     var db: Database {
         self.benchmarker.database
+    }
+    var mongodb: MongoDatabaseRepresentable {
+        db as! MongoDatabaseRepresentable
     }
     
     override func setUpWithError() throws {
@@ -225,7 +253,7 @@ final class FluentMongoDriverTests: XCTestCase {
             ?? "localhost"
         try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
         // Drop existing tables.
-        try (self.db as! MongoDatabaseRepresentable).raw.drop().wait()
+        try mongodb.raw.drop().wait()
     }
     
     override func tearDownWithError() throws {
