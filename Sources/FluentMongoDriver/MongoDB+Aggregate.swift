@@ -58,6 +58,7 @@ extension FluentMongoDatabase {
             let condition = try query.makeMongoDBFilter(aggregate: false)
             let count = CountCommand(on: query.schema, where: condition)
             
+            logger.debug("fluent-mongo count condition=\(condition)")
             return cluster.next(for: .init(writable: false)).flatMap { connection in
                 return connection.executeCodable(
                     count,
@@ -89,6 +90,7 @@ extension FluentMongoDatabase {
                         mongoOperator: "$\(field)"
                     ]
                 ])
+            logger.debug("fluent-mongo find-group operation=\(mongoOperator) field=\(field) condition=\(condition)")
             return find.firstResult().map { result in
                 let res = _MongoDBAggregateResponse(
                     value: result?["n"] ?? Null(),

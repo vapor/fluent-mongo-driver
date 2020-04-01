@@ -30,7 +30,8 @@ extension FluentMongoDatabase {
             }
             
             find.command.sort = try query.makeMongoDBSort()?.document
-
+            
+            logger.debug("fluent-mongo find command=\(find.command)")
             let decoder = BSONDecoder()
             return find.forEach { document in
                 var wrapped = Document()
