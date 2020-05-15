@@ -228,7 +228,7 @@ final class FluentMongoDriverTests: XCTestCase {
     }
     
     var benchmarker: FluentBenchmarker {
-        return .init(databases: self.dbs, (.benchmark1, .benchmark2))
+        return .init(databases: self.dbs)
     }
     var eventLoopGroup: EventLoopGroup!
     var threadPool: NIOThreadPool!
@@ -252,28 +252,19 @@ final class FluentMongoDriverTests: XCTestCase {
             .flatMap { String(cString: $0) }
             ?? "localhost"
         try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
-        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-benchmark1"), as: .benchmark1)
-        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-benchmark2"), as: .benchmark2)
+        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-migration-extra"), as: .migrationExtra)
 
         // Drop existing tables.
-        let database1 = try XCTUnwrap(
+        let databaseExtra = try XCTUnwrap(
             self.benchmarker.databases.database(
-                .benchmark1,
-                logger: Logger(label: "test.fluent.benchmark1"),
-                on: self.eventLoopGroup.next()
-            ) as? MongoDatabaseRepresentable
-        )
-        let database2 = try XCTUnwrap(
-            self.benchmarker.databases.database(
-                .benchmark2,
-                logger: Logger(label: "test.fluent.benchmark2"),
+                .migrationExtra,
+                logger: Logger(label: "test.fluent.migration-extra"),
                 on: self.eventLoopGroup.next()
             ) as? MongoDatabaseRepresentable
         )
 
         try mongodb.raw.drop().wait()
-        try database1.raw.drop().wait()
-        try database2.raw.drop().wait()
+        try databaseExtra.raw.drop().wait()
     }
     
     override func tearDownWithError() throws {
@@ -295,6 +286,5 @@ let isLoggingConfigured: Bool = {
 }()
 
 extension DatabaseID {
-    static let benchmark1 = DatabaseID(string: "benchmark1")
-    static let benchmark2 = DatabaseID(string: "benchmark2")
+    static let migrationExtra = DatabaseID(string: "migration-extra")
 }
