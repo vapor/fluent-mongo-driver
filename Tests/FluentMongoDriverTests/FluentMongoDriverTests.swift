@@ -252,8 +252,19 @@ final class FluentMongoDriverTests: XCTestCase {
             .flatMap { String(cString: $0) }
             ?? "localhost"
         try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
+        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-migration-extra"), as: .migrationExtra)
+
         // Drop existing tables.
+        let databaseExtra = try XCTUnwrap(
+            self.benchmarker.databases.database(
+                .migrationExtra,
+                logger: Logger(label: "test.fluent.migration-extra"),
+                on: self.eventLoopGroup.next()
+            ) as? MongoDatabaseRepresentable
+        )
+
         try mongodb.raw.drop().wait()
+        try databaseExtra.raw.drop().wait()
     }
     
     override func tearDownWithError() throws {
@@ -265,11 +276,19 @@ final class FluentMongoDriverTests: XCTestCase {
     }
 }
 
+func env(_ name: String) -> String? {
+    return ProcessInfo.processInfo.environment[name]
+}
+
 let isLoggingConfigured: Bool = {
     LoggingSystem.bootstrap { label in
         var handler = StreamLogHandler.standardOutput(label: label)
-        handler.logLevel = .debug
+        handler.logLevel = env("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
         return handler
     }
     return true
 }()
+
+extension DatabaseID {
+    static let migrationExtra = DatabaseID(string: "migration-extra")
+}
