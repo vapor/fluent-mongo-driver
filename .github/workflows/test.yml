@@ -2,43 +2,54 @@ name: test
 on:
 - pull_request
 jobs:
-  fluent-mongo-driver_macos:
-    runs-on: macos-latest
-    steps:
-    - run: sudo xcode-select -s /Applications/Xcode_11.4.app/Contents/Developer
-    - run: brew tap mongodb/brew
-    - run: brew install mongodb-community
-    - run: brew services start mongodb/brew/mongodb-community
-    - uses: actions/checkout@v2
-    - run: xcrun swift test --enable-test-discovery --sanitize=thread
-      env:
-        MONGO_HOSTNAME: localhost
-    - run: brew services stop mongodb/brew/mongodb-community
-  fluent-mongo-driver_xenial:
-    container: 
-      image: vapor/swift:5.2-xenial-ci
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        dbimage:
+          - mysql:5.7
+          - mysql:8.0
+          - mariadb:latest
+        runner:
+          # 5.2 Stable
+          - swift:5.2-xenial
+          - swift:5.2-bionic
+          # 5.2 Unstable
+          - swiftlang/swift:nightly-5.2-xenial
+          - swiftlang/swift:nightly-5.2-bionic
+          # 5.3 Unstable
+          - swiftlang/swift:nightly-5.3-xenial
+          - swiftlang/swift:nightly-5.3-bionic
+          # Master Unsable
+          - swiftlang/swift:nightly-master-xenial
+          - swiftlang/swift:nightly-master-bionic
+          - swiftlang/swift:nightly-master-focal
+          - swiftlang/swift:nightly-master-centos8
+          - swiftlang/swift:nightly-master-amazonlinux2
+        include:
+          - runner: swiftlang/swift:nightly-master-centos8
+            installcmd: dnf install -y zlib-devel
+          - runner: swiftlang/swift:nightly-master-amazonlinux2
+            installcmd: yum install -y zlib-devel
+        exclude:
+          - runner: swiftlang/swift:nightly-master-amazonlinux2
+            dbimage: mysql:8.0
+    container: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     services:
-      mongo:
+      mongo-a:
         image: mongo
         ports:
           - 27017:27017
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - run: swift test --enable-test-discovery --sanitize=thread
-      env:
-        MONGO_HOSTNAME: mongo
-  fluent-mongo-driver_bionic:
-    container: 
-      image: vapor/swift:5.2-bionic-ci
-    services:
-      mongo:
+      mongo-b:
         image: mongo
         ports:
           - 27017:27017
-    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - run: swift test --enable-test-discovery --sanitize=thread
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
       env:
-        MONGO_HOSTNAME: mongo
+        MONGO_HOSTNAME_A: mongo-a
+        MONGO_HOSTNAME_B: mongo-b
