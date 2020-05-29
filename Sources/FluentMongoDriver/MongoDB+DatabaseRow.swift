@@ -13,13 +13,21 @@ struct _MongoDBAggregateResponse: DatabaseOutput {
         self
     }
     
-    func contains(_ path: [FieldKey]) -> Bool {
-        path[0] == .aggregate
+    func contains(_ key: FieldKey) -> Bool {
+        key == .aggregate
     }
-    
-    func decode<T>(_ path: [FieldKey], as type: T.Type) throws -> T
+
+    func nested(_ key: FieldKey) throws -> DatabaseOutput {
+        fatalError()
+    }
+
+    func decodeNil(_ key: FieldKey) throws -> Bool {
+        false
+    }
+
+    func decode<T>(_ key: FieldKey, as type: T.Type) throws -> T
         where T: Decodable
     {
-        try self.decoder.decode(type, fromPrimitive: value)
+        try self.decoder.decode(type, fromPrimitive: self.value)
     }
 }

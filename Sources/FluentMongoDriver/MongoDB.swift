@@ -12,6 +12,7 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
     let cluster: MongoCluster
     let raw: MongoDatabase
     let context: DatabaseContext
+    let inTransaction: Bool
 
     func execute(
         query: DatabaseQuery,
@@ -49,7 +50,8 @@ struct FluentMongoDriver: DatabaseDriver {
         FluentMongoDatabase(
             cluster: self.cluster,
             raw: self.cluster[self.targetDatabase].hopped(to: context.eventLoop),
-            context: context
+            context: context,
+            inTransaction: false
         )
     }
     
