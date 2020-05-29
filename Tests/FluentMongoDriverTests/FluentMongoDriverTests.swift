@@ -247,24 +247,15 @@ final class FluentMongoDriverTests: XCTestCase {
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         self.threadPool = NIOThreadPool(numberOfThreads: 1)
         self.dbs = Databases(threadPool: threadPool, on: self.eventLoopGroup)
-        
-        let hostname = getenv("MONGO_HOSTNAME")
-            .flatMap { String(cString: $0) }
-            ?? "localhost"
-        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-database"), as: .mongo)
-        try self.dbs.use(.mongo(connectionString: "mongodb://\(hostname):27017/vapor-migration-extra"), as: .migrationExtra)
+
+        try self.dbs.use(.mongo(connectionString: "mongodb://\(env("MONGO_HOSTNAME_A") ?? "localhost"):\(env("MONGO_PORT_A") ?? "localhost")/\(env("MONGO_DATABASE_A") ?? "vapor_database")"), as: .a)
+        try self.dbs.use(.mongo(connectionString: "mongodb://\(env("MONGO_HOSTNAME_B") ?? "localhost"):\(env("MONGO_PORT_B") ?? "localhost")/v\(env("MONGO_DATABASE_B") ?? "vapor_database")"), as: .b)
 
         // Drop existing tables.
-        let databaseExtra = try XCTUnwrap(
-            self.benchmarker.databases.database(
-                .migrationExtra,
-                logger: Logger(label: "test.fluent.migration-extra"),
-                on: self.eventLoopGroup.next()
-            ) as? MongoDatabaseRepresentable
-        )
-
-        try mongodb.raw.drop().wait()
-        try databaseExtra.raw.drop().wait()
+        let a = self.dbs.database(.a, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.next()) as! MongoDatabaseRepresentable
+        try a.raw.drop().wait()
+        let b = self.dbs.database(.b, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.next()) as! MongoDatabaseRepresentable
+        try b.raw.drop().wait()
     }
     
     override func tearDownWithError() throws {
@@ -290,5 +281,6 @@ let isLoggingConfigured: Bool = {
 }()
 
 extension DatabaseID {
-    static let migrationExtra = DatabaseID(string: "migration-extra")
+    static let a = DatabaseID(string: "mongo-a")
+    static let b = DatabaseID(string: "mongo-b")
 }
