@@ -9,6 +9,8 @@ extension FieldKey {
             return name
         case .aggregate:
             fatalError("Unsupported field key: \(self).")
+        case .prefix(let prefix, let key):
+            return prefix.makeMongoKey() + key.makeMongoKey()
         }
     }
 }

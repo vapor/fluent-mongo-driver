@@ -16,8 +16,11 @@ extension FluentMongoDatabase {
         do {
             var futures = [EventLoopFuture<Void>]()
 
-            nextConstraint: for constraint in schema.constraints {
-                switch constraint {
+            nextConstraint: for constraint in schema.createConstraints {
+                guard case .constraint(let algorithm, _) = constraint else {
+                    continue nextConstraint
+                }
+                switch algorithm {
                 case .unique(let fields):
                     let indexKeys = try fields.map { field -> String in
                         switch field {
