@@ -17,10 +17,6 @@ struct _MongoDBAggregateResponse: DatabaseOutput {
         key == .aggregate
     }
 
-    func nested(_ key: FieldKey) throws -> DatabaseOutput {
-        fatalError()
-    }
-
     func decodeNil(_ key: FieldKey) throws -> Bool {
         false
     }

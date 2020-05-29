@@ -24,13 +24,6 @@ private struct _FluentMongoOutput: DatabaseOutput {
         self.primitive(key) != nil
     }
 
-    func nested(_ key: FieldKey) throws -> DatabaseOutput {
-        guard let document = self.primitive(key) as? Document else {
-            fatalError()
-        }
-        return _FluentMongoOutput(document: document, decoder: self.decoder, schema: self.schema)
-    }
-
     func decodeNil(_ key: FieldKey) throws -> Bool {
         if let primitive = self.primitive(key) {
             return primitive.equals(Null())
