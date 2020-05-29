@@ -1,8 +1,12 @@
 version: '3'
 
 services:
-  mongo-4:
-    image: mongo:4
+  mongo-a:
+    image: mongo
     ports:
       - 27017:27017
+  mongo-b:
+    image: mongo
+    ports:
+      - 27018:27017
 
