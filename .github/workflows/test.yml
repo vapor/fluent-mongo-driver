@@ -7,9 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         dbimage:
-          - mysql:5.7
-          - mysql:8.0
-          - mariadb:latest
+          - mongo
         runner:
           # 5.2 Stable
           - swift:5.2-xenial
@@ -38,13 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mongo-a:
-        image: mongo
-        ports:
-          - 27017:27017
+        image: ${{ matrix.dbimage }}
       mongo-b:
-        image: mongo
-        ports:
-          - 27017:27017
+        image: ${{ matrix.dbimage }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
