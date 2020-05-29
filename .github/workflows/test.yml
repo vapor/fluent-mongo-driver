@@ -50,6 +50,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
-      env:
-        MONGO_HOSTNAME_A: mongo-a
-        MONGO_HOSTNAME_B: mongo-b
+        env:
+          MONGO_HOSTNAME_A: mongo-a
+          MONGO_HOSTNAME_B: mongo-b
