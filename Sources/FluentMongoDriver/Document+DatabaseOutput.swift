@@ -49,6 +49,11 @@ private struct _FluentMongoOutput: DatabaseOutput {
     }
 
     private func primitive(_ key: FieldKey) -> Primitive? {
-        self.document[key.makeMongoKey()]
+        if let schema = self.schema {
+            let nested = self.document[schema] as! Document
+            return nested[key.makeMongoKey()]
+        } else {
+            return self.document[key.makeMongoKey()]
+        }
     }
 }
