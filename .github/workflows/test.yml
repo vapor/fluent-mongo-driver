@@ -1,14 +1,23 @@
-name: test
+name: Test Matrix
+
 on:
-- pull_request
+  pull_request:
+  push:
+    branches:
+    - master
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  linux:
+
+  Linux:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        dbimage:
-          - mongo
-        runner:
+        image:
           # 5.2 Stable
           - swift:5.2-xenial
           - swift:5.2-bionic
@@ -24,26 +33,50 @@ jobs:
           - swiftlang/swift:nightly-master-focal
           - swiftlang/swift:nightly-master-centos8
           - swiftlang/swift:nightly-master-amazonlinux2
-        include:
-          - runner: swiftlang/swift:nightly-master-centos8
-            installcmd: dnf install -y zlib-devel
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            installcmd: yum install -y zlib-devel
-        exclude:
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            dbimage: mysql:8.0
-    container: ${{ matrix.runner }}
-    runs-on: ubuntu-latest
+        dbimage: 
+          - mongo:3
+          - mongo:4
+    container: ${{ matrix.image }}
     services:
       mongo-a:
         image: ${{ matrix.dbimage }}
       mongo-b:
         image: ${{ matrix.dbimage }}
+    env:
+      MONGO_HOSTNAME_A: mongo-a
+      MONGO_HOSTNAME_B: mongo-b
     steps:
-      - name: Check out code
+      - name: Wait for database servers to be ready
+        run: sleep 5
+      - name: Checkout code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
-        env:
-          MONGO_HOSTNAME_A: mongo-a
-          MONGO_HOSTNAME_B: mongo-b
+
+  macOS:
+    strategy:
+      fail-fast: false
+      matrix:
+        formula:
+          - mongodb-community@3.6
+          - mongodb-community
+    env:
+      MONGO_DATABASE_A: vapor_database_a
+      MONGO_DATABASE_B: vapor_database_b
+    runs-on: macos-latest
+    steps:
+      - name: Select latest available Xcode
+        uses: maxim-lobanov/setup-xcode@1.0
+        with: { 'xcode-version': 'latest' }
+      - name: Install and start Mongo server, wait for ready
+        run: |
+          brew tap mongodb/brew
+          brew install ${{ matrix.formula }} && brew link --force ${{ matrix.formula }}
+          brew services start ${{ matrix.formula }}
+      - name: Wait for server to be ready
+        run: until mongo --eval ';'; do sleep 1; done
+        timeout-minutes: 2
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
