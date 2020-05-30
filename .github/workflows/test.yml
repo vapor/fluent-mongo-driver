@@ -68,9 +68,10 @@ jobs:
       - name: Select latest available Xcode
         uses: maxim-lobanov/setup-xcode@1.0
         with: { 'xcode-version': 'latest' }
-      - name: Install and start Mongo server, wait for ready
+      - name: Replace and start Mongo server, wait for ready
         run: |
           brew tap mongodb/brew
+          brew uninstall --force mongodb-community && rm -rf /usr/local/var/mongodb
           brew install ${{ matrix.formula }} && brew link --force ${{ matrix.formula }}
           brew services start ${{ matrix.formula }}
       - name: Wait for server to be ready
