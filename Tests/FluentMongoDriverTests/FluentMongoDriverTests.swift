@@ -246,8 +246,8 @@ final class FluentMongoDriverTests: XCTestCase {
         try super.setUpWithError()
         
         XCTAssert(isLoggingConfigured)
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.threadPool = NIOThreadPool(numberOfThreads: 1)
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
         self.dbs = Databases(threadPool: threadPool, on: self.eventLoopGroup)
 
         try self.dbs.use(.mongo(settings: .init(
