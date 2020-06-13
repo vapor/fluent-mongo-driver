@@ -264,7 +264,7 @@ final class FluentMongoDriverTests: XCTestCase {
                 hostname: env("MONGO_HOSTNAME_B") ?? "localhost",
                 port: env("MONGO_PORT_B").flatMap(Int.init) ?? 27017
             )],
-            targetDatabase: env("MONGO_DATABASE_B") ?? "vapor_database"
+            targetDatabase: env("MONGO_DATABASE_B") ?? "vapor_database_2"
         )), as: .b)
 
         // Drop existing tables.
