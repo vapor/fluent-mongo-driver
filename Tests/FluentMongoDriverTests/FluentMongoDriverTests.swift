@@ -107,8 +107,7 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testFilter(sql: false)
     }
     func testJoin() throws {
-        #warning("TODO: add partial key select")
-        // try self.benchmarker.testJoin()
+         try self.benchmarker.testJoin()
     }
     func testMiddleware() throws { try self.benchmarker.testMiddleware() }
     func testMigrator() throws { try self.benchmarker.testMigrator() }

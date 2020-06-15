@@ -101,6 +101,12 @@ extension DatabaseQuery {
         case .none:
             break
         }
+
+        var projection = Projection(document: [:])
+        for field in fields {
+            try projection.include(field.makeProjectedMongoPath())
+        }
+        stages.append(project(projection))
         
         return stages
     }

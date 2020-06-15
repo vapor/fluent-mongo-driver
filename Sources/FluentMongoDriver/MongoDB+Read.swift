@@ -29,6 +29,14 @@ extension FluentMongoDatabase {
                 break
             }
             
+            var projection = Projection(document: [:])
+            for field in query.fields {
+                // The entity is not put into the projected path
+                // Therefore the standard full path it used without the schema as prefix
+                try projection.include(field.makeMongoPath())
+            }
+            find.command.projection = projection.document
+            
             find.command.sort = try query.makeMongoDBSort()?.document
             
             logger.debug("fluent-mongo find command=\(find.command)")
