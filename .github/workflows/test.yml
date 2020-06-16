@@ -24,14 +24,14 @@ jobs:
           #- swiftlang/swift:nightly-master-focal
           #- swiftlang/swift:nightly-master-centos8
           #- swiftlang/swift:nightly-master-amazonlinux2
-        include:
-          - runner: swiftlang/swift:nightly-master-centos8
-            installcmd: dnf install -y zlib-devel
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            installcmd: yum install -y zlib-devel
-        exclude:
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            dbimage: mysql:8.0
+        #include:
+        #  - runner: swiftlang/swift:nightly-master-centos8
+        #    installcmd: dnf install -y zlib-devel
+        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
+        #    installcmd: yum install -y zlib-devel
+        #exclude:
+        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
+        #    dbimage: mysql:8.0
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
     services:
