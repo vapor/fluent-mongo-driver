@@ -19,19 +19,19 @@ jobs:
           - swiftlang/swift:nightly-5.3-xenial
           - swiftlang/swift:nightly-5.3-bionic
           # Master Unsable
-          - swiftlang/swift:nightly-master-xenial
-          - swiftlang/swift:nightly-master-bionic
-          - swiftlang/swift:nightly-master-focal
-          - swiftlang/swift:nightly-master-centos8
-          - swiftlang/swift:nightly-master-amazonlinux2
-        include:
-          - runner: swiftlang/swift:nightly-master-centos8
-            installcmd: dnf install -y zlib-devel
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            installcmd: yum install -y zlib-devel
-        exclude:
-          - runner: swiftlang/swift:nightly-master-amazonlinux2
-            dbimage: mysql:8.0
+          #- swiftlang/swift:nightly-master-xenial
+          #- swiftlang/swift:nightly-master-bionic
+          #- swiftlang/swift:nightly-master-focal
+          #- swiftlang/swift:nightly-master-centos8
+          #- swiftlang/swift:nightly-master-amazonlinux2
+        #include:
+        #  - runner: swiftlang/swift:nightly-master-centos8
+        #    installcmd: dnf install -y zlib-devel
+        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
+        #    installcmd: yum install -y zlib-devel
+        #exclude:
+        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
+        #    dbimage: mysql:8.0
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
     services:

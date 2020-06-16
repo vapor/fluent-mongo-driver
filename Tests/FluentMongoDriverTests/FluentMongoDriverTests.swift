@@ -107,8 +107,7 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.benchmarker.testFilter(sql: false)
     }
     func testJoin() throws {
-        #warning("TODO: add partial key select")
-        // try self.benchmarker.testJoin()
+         try self.benchmarker.testJoin()
     }
     func testMiddleware() throws { try self.benchmarker.testMiddleware() }
     func testMigrator() throws { try self.benchmarker.testMigrator() }
@@ -264,7 +263,7 @@ final class FluentMongoDriverTests: XCTestCase {
                 hostname: env("MONGO_HOSTNAME_B") ?? "localhost",
                 port: env("MONGO_PORT_B").flatMap(Int.init) ?? 27017
             )],
-            targetDatabase: env("MONGO_DATABASE_B") ?? "vapor_database"
+            targetDatabase: env("MONGO_DATABASE_B") ?? "vapor_database_2"
         )), as: .b)
 
         // Drop existing tables.
