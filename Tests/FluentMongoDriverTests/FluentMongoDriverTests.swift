@@ -96,6 +96,7 @@ final class FluentMongoDriverTests: XCTestCase {
     func testCRUD() throws { try self.benchmarker.testCRUD() }
     func testEagerLoad() throws { try self.benchmarker.testEagerLoad() }
     func testEnum() throws { try self.benchmarker.testEnum() }
+    func testGroupBy() throws { try self.benchmarker.testGroupBy() }
     func testGroup() throws { try self.benchmarker.testGroup() }
     func testID() throws {
         try self.benchmarker.testID(
