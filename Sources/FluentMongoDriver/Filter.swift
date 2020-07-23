@@ -37,9 +37,29 @@ extension DatabaseQuery.Filter {
                 path = try field.makeMongoPath()
             }
             
-            let filterOperator = try operation.makeMongoOperator()
             var filter = Document()
-            try filter[path][filterOperator] = value.makePrimitive()
+            switch operation {
+            case .contains(let inverse, let contains):
+                guard case .bind(let bind) = value, let string = bind as? String else {
+                    throw FluentMongoError.unsupportedFilterValue
+                }
+                let pattern: String
+                switch contains {
+                case .anywhere:
+                    pattern = ".*\(string).*"
+                case .prefix:
+                    pattern = "\(string).*"
+                case .suffix:
+                    pattern = ".*\(string)"
+                }
+                if inverse {
+                    filter[path]["$not"]["$regex"] = pattern
+                } else {
+                    filter[path]["$regex"] = pattern
+                }
+            default:
+                try filter[path][operation.makeMongoOperator()] = value.makePrimitive()
+            }
             return filter
         case .field(let a, let operation, let b):
             var filter = Document()
