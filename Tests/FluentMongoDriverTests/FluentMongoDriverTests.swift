@@ -86,9 +86,7 @@ public final class NestedStorage: Model {
 }
 
 final class FluentMongoDriverTests: XCTestCase {
-    func testAggregate() throws {
-        try self.benchmarker.testAggregate(max: false)
-    }
+    func testAggregate() throws { try self.benchmarker.testAggregate(max: false) }
     func testArray() throws { try self.benchmarker.testArray() }
     func testBatch() throws { try self.benchmarker.testBatch() }
     func testChildren() throws { try self.benchmarker.testChildren() }
@@ -103,12 +101,8 @@ final class FluentMongoDriverTests: XCTestCase {
             custom: false
         )
     }
-    func testFilter() throws {
-        try self.benchmarker.testFilter(sql: false)
-    }
-    func testJoin() throws {
-         try self.benchmarker.testJoin()
-    }
+    func testFilter() throws { try self.benchmarker.testFilter(sql: false) }
+    func testJoin() throws { try self.benchmarker.testJoin() }
     func testMiddleware() throws { try self.benchmarker.testMiddleware() }
     func testMigrator() throws { try self.benchmarker.testMigrator() }
     func testModel() throws { try self.benchmarker.testModel() }
@@ -120,7 +114,7 @@ final class FluentMongoDriverTests: XCTestCase {
     func testSet() throws { try self.benchmarker.testSet() }
     func testSiblings() throws { try self.benchmarker.testSiblings() }
     func testSoftDelete() throws { try self.benchmarker.testSoftDelete() }
-    func testSort() throws { try self.benchmarker.testSort() }
+    func testSort() throws { try self.benchmarker.testSort(sql: false) }
     func testTimestamp() throws { try self.benchmarker.testTimestamp() }
     func testUnique() throws { try self.benchmarker.testUnique() }
     
