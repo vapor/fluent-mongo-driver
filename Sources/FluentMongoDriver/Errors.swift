@@ -20,9 +20,23 @@ enum FluentMongoError: Error, DatabaseError {
     var isConstraintFailure: Bool { false }
     var isConnectionClosed: Bool { false }
     
-    case missingHosts, noTargetDatabaseSpecified, unsupportedJoin, unsupportedOperator, invalidIndexKey
-    case unsupportedField, unsupportedDefaultValue, insertFailed, unsupportedFilter
-    case unsupportedCustomLimit, unsupportedCustomFilter, unsupportedCustomValue, unsupportedCustomAction, unsupportedCustomSort, unsupportedCustomAggregate
+    case missingHosts
+    case noTargetDatabaseSpecified
+    case unsupportedJoin
+    case unsupportedOperator
+    case unsupportedFilterValue
+    case invalidIndexKey
+    case unsupportedField
+    case unsupportedDefaultValue
+    case insertFailed
+    case unsupportedFilter
+    case unsupportedCustomLimit
+    case unsupportedCustomFilter
+    case unsupportedCustomValue
+    case unsupportedCustomAction
+    case unsupportedCustomSort
+    case unsupportedCustomAggregate
+    case notMongoDB, fileNotFound
 }
 
 
