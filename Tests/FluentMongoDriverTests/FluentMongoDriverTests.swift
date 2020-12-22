@@ -4,93 +4,97 @@ import FluentBenchmark
 import FluentMongoDriver
 import XCTest
 
-public final class DateRange: Model {
-    public static let schema = "date-range"
+final class DateRange: Model {
+    static let schema = "date-range"
     
     @ID(key: .id)
-    public var id: UUID?
+    var id: UUID?
     
     @Field(key: "start")
-    public var start: Date
+    var start: Date
     
     @Field(key: "end")
-    public var end: Date
+    var end: Date
     
-    public init() {}
+    init() {}
     
-    public init(from: Date, to: Date) {
+    init(from: Date, to: Date) {
         self.start = from
         self.end = to
     }
 }
 
-public final class CustomIDEntity: Model {
-    public static let schema = "entities"
+final class CustomIDEntity: Model {
+    static let schema = "entities"
     
     @ID(custom: .id)
-    public var id: ObjectId?
+    var id: ObjectId?
 
     @Field(key: "name")
-    public var name: String
+    var name: String
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, name: String) {
+    init(id: ObjectId? = nil, name: String) {
         self.id = id
         self.name = name
     }
 }
 
-public final class NestedSiblings: Model {
-    public static let schema = "parent"
+final class NestedSiblings: Model {
+    static let schema = "parent"
     @ID(custom: .id)
-    public var id: ObjectId?
+    var id: ObjectId?
 
     @SiblingsField(key: "dates")
-    public var dates: [DateRange]
+    var dates: [DateRange]
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, dates: [UUID]) {
+    init(id: ObjectId? = nil, dates: [UUID]) {
         self.$dates.identifiers = dates
     }
 }
 
-public final class DocumentStorage: Model {
-    public static let schema = "documentstorages"
+final class DocumentStorage: Model {
+    static let schema = "documentstorages"
+    
+    @ID(custom: .id)
+    var id: ObjectId?
+    
     @Field(key: "document")
-    public var document: Document
+    var document: Document
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, document: Document) {
+    init(id: ObjectId? = nil, document: Document) {
         self.id = id
         self.document = document
     }
 }
 
-public final class Nested: Fields {
+final class Nested: Fields {
     @Field(key: "value")
-    public var value: String
+    var value: String
     
-    public init() {}
-    public init(value: String) {
+    init() {}
+    init(value: String) {
         self.value = value
     }
 }
 
-public final class NestedStorage: Model {
-    public static let schema = "documentstorages"
+final class NestedStorage: Model {
+    static let schema = "documentstorages"
     
     @ID(custom: .id)
-    public var id: ObjectId?
+    var id: ObjectId?
 
     @Field(key: "nested")
-    public var nested: Nested
+    var nested: Nested
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, nested: Nested) {
+    init(id: ObjectId? = nil, nested: Nested) {
         self.id = id
         self.nested = nested
     }
@@ -220,15 +224,15 @@ final class FluentMongoDriverTests: XCTestCase {
         try entity.save(on: db).wait()
         
         // This will work as long as there's one entity
-        let _sibling = try NestedSiblings.query(on: db).with(\.$dates).first().wait()
+        let _sameEntity = try NestedSiblings.query(on: db).with(\.$dates).first().wait()
         
-        guard let sibling = _sibling else {
+        guard let sameEntity = _sameEntity else {
             XCTFail("No entities found, although there was one saved")
             return
         }
         
         for i in range {
-            XCTAssertEqual(sibling.dates[i].id, siblings[i].id)
+            XCTAssertEqual(sameEntity.dates[i].id, siblings[i].id)
         }
     }
     

@@ -43,14 +43,11 @@ public final class SiblingsFieldProperty<From, To>
     }
 }
 
-extension SiblingsFieldProperty: PropertyProtocol {
+extension SiblingsFieldProperty: Property {
     public typealias Model = From
     public typealias Value = [To]
     
 }
-
-extension SiblingsFieldProperty: FieldProtocol { }
-extension SiblingsFieldProperty: AnyField { }
 
 extension SiblingsFieldProperty: Relation {
     public var name: String {
@@ -64,22 +61,23 @@ extension SiblingsFieldProperty: Relation {
     }
 }
 
-extension SiblingsFieldProperty: AnyProperty {
-    public var nested: [AnyProperty] { [] }
-    public var path: [FieldKey] { [self.key] }
-
-    public func input(to input: inout DatabaseInput) {
-        input.values[self.key] = identifiers.map { identifiers in
-            return .bind(identifiers)
-        }
+extension SiblingsFieldProperty: AnyDatabaseProperty {
+    public var keys: [FieldKey] {
+        [self.key]
+    }
+    
+    public func input(to input: DatabaseInput) {
+        input.set(identifiers.map { identifiers in
+            .bind(identifiers)
+        } ?? .null, at: key)
     }
 
     public func output(from output: DatabaseOutput) throws {
-        if output.contains([self.key]) {
+        if output.contains(key) {
             self.identifiers = nil
             
             do {
-                self.identifiers = try output.decode(self.key, as: [To.IDValue].self)
+                self.identifiers = try output.decode(key, as: [To.IDValue].self)
             } catch {
                 throw FluentError.invalidField(
                     name: self.key.description,
@@ -88,17 +86,6 @@ extension SiblingsFieldProperty: AnyProperty {
                 )
             }
         }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        if let identifiers = self.identifiers {
-            var container = encoder.singleValueContainer()
-            try container.encode(identifiers)
-        }
-    }
-
-    public func decode(from decoder: Decoder) throws {
-        self.identifiers = try [To.IDValue](from: decoder)
     }
 }
 

@@ -38,13 +38,10 @@ public final class SiblingFieldProperty<From, To>
     }
 }
 
-extension SiblingFieldProperty: PropertyProtocol {
+extension SiblingFieldProperty: Property {
     public typealias Model = From
     public typealias Value = To
 }
-
-extension SiblingFieldProperty: FieldProtocol { }
-extension SiblingFieldProperty: AnyField { }
 
 extension SiblingFieldProperty: Relation {
     public var name: String {
@@ -90,13 +87,13 @@ extension SiblingFieldProperty: AnyProperty {
     public var path: [FieldKey] { [self.key] }
 
     public func input(to input: inout DatabaseInput) {
-        input.values[self.key] = identifier.map { identifiers in
-            return .bind(identifiers)
-        }
+        input.set(identifier.map { identifiers in
+            .bind(identifiers)
+        } ?? .null, at: key)
     }
 
     public func output(from output: DatabaseOutput) throws {
-        if output.contains([self.key]) {
+        if output.contains(key) {
             self.identifier = nil
             
             do {
