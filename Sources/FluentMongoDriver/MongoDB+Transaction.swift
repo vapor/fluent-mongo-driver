@@ -9,10 +9,11 @@ extension FluentMongoDatabase {
         }
         do {
             let transactionDatabase = try raw.startTransaction(autoCommitChanges: false)
+            let context =  DatabaseContext.init(configuration: self.context.configuration, logger: self.context.logger, eventLoop: transactionDatabase.eventLoop)
             let database = FluentMongoDatabase(
                 cluster: self.cluster,
                 raw: transactionDatabase,
-                context: self.context,
+                context: context,
                 inTransaction: true
             )
             return closure(database).flatMap { value in
@@ -21,7 +22,7 @@ extension FluentMongoDatabase {
                 return transactionDatabase.abort().flatMapThrowing { _ in
                     throw error
                 }
-            }
+            }.hop(to: context.eventLoop)
         } catch {
             return self.eventLoop.makeFailedFuture(error)
         }
