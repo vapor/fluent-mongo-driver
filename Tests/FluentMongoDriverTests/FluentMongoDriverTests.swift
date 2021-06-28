@@ -24,62 +24,77 @@ final class DateRange: Model {
     }
 }
 
-public final class Entity: Model {
-    public static let schema = "entities"
+final class CustomIDEntity: Model {
+    static let schema = "entities"
     
     @ID(custom: .id)
-    public var id: ObjectId?
+    var id: ObjectId?
 
     @Field(key: "name")
-    public var name: String
+    var name: String
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, name: String) {
+    init(id: ObjectId? = nil, name: String) {
         self.id = id
         self.name = name
     }
 }
 
-public final class DocumentStorage: Model {
-    public static let schema = "documentstorages"
+final class NestedSiblings: Model {
+    static let schema = "parent"
+    @ID(custom: .id)
+    var id: ObjectId?
+
+    @SiblingsField(key: "dates")
+    var dates: [DateRange]
+
+    init() { }
+
+    init(id: ObjectId? = nil, dates: [UUID]) {
+        self.$dates.identifiers = dates
+    }
+}
+
+final class DocumentStorage: Model {
+    static let schema = "documentstorages"
     
     @ID(custom: .id)
-    public var id: ObjectId?
-
+    var id: ObjectId?
+    
     @Field(key: "document")
-    public var document: Document
+    var document: Document
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, document: Document) {
+    init(id: ObjectId? = nil, document: Document) {
         self.id = id
         self.document = document
     }
 }
 
-public final class Nested: Fields {
+final class Nested: Fields {
     @Field(key: "value")
-    public var value: String
+    var value: String
     
-    public init() {}
-    public init(value: String) {
+    init() {}
+    init(value: String) {
         self.value = value
     }
 }
 
-public final class NestedStorage: Model {
-    public static let schema = "documentstorages"
+final class NestedStorage: Model {
+    static let schema = "documentstorages"
     
     @ID(custom: .id)
-    public var id: ObjectId?
+    var id: ObjectId?
 
     @Field(key: "nested")
-    public var nested: Nested
+    var nested: Nested
 
-    public init() { }
+    init() { }
 
-    public init(id: ObjectId? = nil, nested: Nested) {
+    init(id: ObjectId? = nil, nested: Nested) {
         self.id = id
         self.nested = nested
     }
@@ -182,19 +197,43 @@ final class FluentMongoDriverTests: XCTestCase {
         
         XCTAssertEqual(sameDoc.nested.value, "hello")
     }
-  
+    
     func testObjectId() throws {
-        let entity = Entity(name: "test")
+        let entity = CustomIDEntity(name: "test")
         
-        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 0)
         
         try entity.save(on: db).wait()
-        XCTAssertEqual(try Entity.query(on: db).count().wait(), 1)
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 1)
         
-        XCTAssertNotNil(try Entity.find(entity.id, on: db).wait())
+        XCTAssertNotNil(try CustomIDEntity.find(entity.id, on: db).wait())
         
         try entity.delete(on: db).wait()
-        XCTAssertEqual(try Entity.query(on: db).count().wait(), 0)
+        XCTAssertEqual(try CustomIDEntity.query(on: db).count().wait(), 0)
+    }
+    
+    func testSiblingsField() throws {
+        let range = 0..<5
+        let siblings = try range.map { _ -> DateRange in
+            let range = DateRange(from: Date(), to: Date())
+            try range.save(on: db).wait()
+            return range
+        }
+        
+        let entity = NestedSiblings(dates: siblings.compactMap(\.id))
+        try entity.save(on: db).wait()
+        
+        // This will work as long as there's one entity
+        let _sameEntity = try NestedSiblings.query(on: db).with(\.$dates).first().wait()
+        
+        guard let sameEntity = _sameEntity else {
+            XCTFail("No entities found, although there was one saved")
+            return
+        }
+        
+        for i in range {
+            XCTAssertEqual(sameEntity.dates[i].id, siblings[i].id)
+        }
     }
     
     func testGridFS() throws {
