@@ -15,10 +15,10 @@ extension MongoError: DatabaseError {
     public var isConnectionClosed: Bool { false }
 }
 
-enum FluentMongoError: Error, DatabaseError {
-    var isSyntaxError: Bool { false }
-    var isConstraintFailure: Bool { false }
-    var isConnectionClosed: Bool { false }
+public enum FluentMongoError: Error, DatabaseError {
+    public var isSyntaxError: Bool { false }
+    public var isConstraintFailure: Bool { false }
+    public var isConnectionClosed: Bool { false }
     
     case missingHosts
     case noTargetDatabaseSpecified
@@ -41,7 +41,7 @@ enum FluentMongoError: Error, DatabaseError {
 
 
 extension FluentMongoError: LocalizedError {
-    var errorDescription: String? {
+    public var errorDescription: String? {
         "\(self)"
     }
 }
