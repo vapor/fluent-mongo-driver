@@ -9,29 +9,10 @@ jobs:
         dbimage:
           - mongo
         runner:
-          # 5.2 Stable
-          - swift:5.2-xenial
-          - swift:5.2-bionic
-          # 5.2 Unstable
-          - swiftlang/swift:nightly-5.2-xenial
-          - swiftlang/swift:nightly-5.2-bionic
-          # 5.3 Unstable
-          - swiftlang/swift:nightly-5.3-xenial
-          - swiftlang/swift:nightly-5.3-bionic
-          # Master Unsable
-          #- swiftlang/swift:nightly-master-xenial
-          #- swiftlang/swift:nightly-master-bionic
-          #- swiftlang/swift:nightly-master-focal
-          #- swiftlang/swift:nightly-master-centos8
-          #- swiftlang/swift:nightly-master-amazonlinux2
-        #include:
-        #  - runner: swiftlang/swift:nightly-master-centos8
-        #    installcmd: dnf install -y zlib-devel
-        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
-        #    installcmd: yum install -y zlib-devel
-        #exclude:
-        #  - runner: swiftlang/swift:nightly-master-amazonlinux2
-        #    dbimage: mysql:8.0
+          - swift:5.2-focal
+          - swift:5.5-focal
+          - swift:5.6-focal
+          - swiftlang/swift:nightly-main-focal
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
     services:
@@ -41,7 +22,7 @@ jobs:
         image: ${{ matrix.dbimage }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
         env:

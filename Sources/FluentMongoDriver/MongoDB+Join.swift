@@ -73,6 +73,30 @@ extension DatabaseQuery {
                 case .custom:
                     fatalError()
                 }
+            case .extendedJoin(let schema, let space, let alias, let method, let foreignKey, let localKey):
+                guard space == nil else { fatalError("unsupported") }
+                switch method {
+                case .left:
+                    stages.append(lookup(
+                        from: schema,
+                        localField: try localKey.makeProjectedMongoPath(),
+                        foreignField: try foreignKey.makeMongoPath(),
+                        as: alias ?? schema
+                    ))
+                case .inner:
+                    stages.append(lookup(
+                        from: schema,
+                        localField: try localKey.makeProjectedMongoPath(),
+                        foreignField: try foreignKey.makeMongoPath(),
+                        as: alias ?? schema
+                    ))
+
+                    stages.append(AggregateBuilderStage(document: [
+                        "$unwind": "$\(alias ?? schema)"
+                    ]))
+                case .custom:
+                    fatalError()
+                }
             case .custom:
                 throw FluentMongoError.unsupportedJoin
             }
