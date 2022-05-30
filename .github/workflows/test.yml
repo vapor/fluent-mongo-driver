@@ -9,7 +9,7 @@ jobs:
         dbimage:
           - mongo
         runner:
-          - swift:5.2-focal
+          - swift:5.4-focal
           - swift:5.5-focal
           - swift:5.6-focal
           - swiftlang/swift:nightly-main-focal
@@ -24,7 +24,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
       - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --sanitize=thread
         env:
           MONGO_HOSTNAME_A: mongo-a
           MONGO_HOSTNAME_B: mongo-b
