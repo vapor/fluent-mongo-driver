@@ -21,7 +21,7 @@ extension FluentMongoDatabase {
                     continue nextConstraint
                 }
                 switch algorithm {
-                case .unique(let fields):
+                case .unique(let fields), .compositeIdentifier(let fields):
                     let indexKeys = try fields.map { field -> String in
                         switch field {
                         case .key(let key):
