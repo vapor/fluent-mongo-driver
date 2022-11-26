@@ -250,7 +250,7 @@ final class FluentMongoDriverTests: XCTestCase {
                 hostname: env("MONGO_HOSTNAME_A") ?? "localhost",
                 port: env("MONGO_PORT_A").flatMap(Int.init) ?? 27017
             )],
-            targetDatabase: env("MONGO_DATABASE_A") ?? "vapor_database"
+            targetDatabase: env("MONGO_DATABASE_A") ?? "test_database"
         )), as: .a)
         try self.dbs.use(.mongo(settings: .init(
             authentication: .unauthenticated,
@@ -258,13 +258,13 @@ final class FluentMongoDriverTests: XCTestCase {
                 hostname: env("MONGO_HOSTNAME_B") ?? "localhost",
                 port: env("MONGO_PORT_B").flatMap(Int.init) ?? 27017
             )],
-            targetDatabase: env("MONGO_DATABASE_B") ?? "vapor_database_2"
+            targetDatabase: env("MONGO_DATABASE_B") ?? "test_database"
         )), as: .b)
 
         // Drop existing tables.
-        let a = self.dbs.database(.a, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.next()) as! MongoDatabaseRepresentable
+        let a = self.dbs.database(.a, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.any()) as! MongoDatabaseRepresentable
         try a.raw.drop().wait()
-        let b = self.dbs.database(.b, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.next()) as! MongoDatabaseRepresentable
+        let b = self.dbs.database(.b, logger: Logger(label: "test.fluent.b"), on: self.eventLoopGroup.any()) as! MongoDatabaseRepresentable
         try b.raw.drop().wait()
     }
     

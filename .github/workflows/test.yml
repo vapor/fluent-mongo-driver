@@ -9,6 +9,9 @@ env:
   MONGO_HOSTNAME: 'mongo-a'
   MONGO_HOSTNAME_A: 'mongo-a'
   MONGO_HOSTNAME_B: 'mongo-b'
+  MONGO_DATABASE: 'test_database'
+  MONGO_DATABASE_A: 'test_database'
+  MONGO_DATABASE_B: 'test_database'
 
 jobs:
   # Baseline test run for code coverage stats
@@ -95,6 +98,7 @@ jobs:
       MONGO_HOSTNAME: 127.0.0.1
       MONGO_HOSTNAME_A: 127.0.0.1
       MONGO_HOSTNAME_B: 127.0.0.1
+      MONGO_DATABASE_B: 'test_database_b'
     steps:
       - name: Select latest available Xcode
         uses: maxim-lobanov/setup-xcode@v1
