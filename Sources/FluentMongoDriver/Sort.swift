@@ -15,3 +15,22 @@ extension DatabaseQuery.Sort.Direction {
         }
     }
 }
+
+extension DatabaseQuery.Sort {
+    internal func makeMongoDBSort(aggregate: Bool) throws -> (String, SortOrder) {
+        switch self {
+        case .sort(let field, let direction):
+            let path: String
+            
+            if aggregate {
+                path = try field.makeProjectedMongoPath()
+            } else {
+                path = try field.makeMongoPath()
+            }
+            
+            return try (path, direction.makeMongoDirection())
+        case .custom:
+            throw FluentMongoError.unsupportedCustomSort
+        }
+    }
+}

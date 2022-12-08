@@ -37,7 +37,7 @@ extension FluentMongoDatabase {
             }
             find.command.projection = projection.document
             
-            find.command.sort = try query.makeMongoDBSort()?.document
+            find.command.sort = try query.makeMongoDBSort(aggregate: false)?.document
             
             logger.debug("fluent-mongo find command=\(find.command)")
             let decoder = BSONDecoder()

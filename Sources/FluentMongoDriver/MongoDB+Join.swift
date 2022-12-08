@@ -123,6 +123,10 @@ extension DatabaseQuery {
             stages.append(match(filter))
         }
         
+        if let mongoDBSort = try makeMongoDBSort(aggregate: true) {
+            stages.append(sort(mongoDBSort))
+        }
+        
         switch offsets.first {
         case .count(let offset):
             stages.append(skip(offset))
