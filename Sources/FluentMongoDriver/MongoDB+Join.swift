@@ -71,10 +71,10 @@ extension DatabaseQuery {
                         "$unwind": "$\(alias ?? schema)"
                     ]))
                 case .custom:
-                    fatalError()
+                    throw FluentMongoError.unsupportedJoin
                 }
             case .extendedJoin(let schema, let space, let alias, let method, let foreignKey, let localKey):
-                guard space == nil else { fatalError("unsupported") }
+                guard space == nil else { throw FluentMongoError.unsupportedJoin }
                 switch method {
                 case .left:
                     stages.append(lookup(
@@ -95,8 +95,23 @@ extension DatabaseQuery {
                         "$unwind": "$\(alias ?? schema)"
                     ]))
                 case .custom:
-                    fatalError()
+                    throw FluentMongoError.unsupportedJoin
                 }
+            case .advancedJoin(let schema, let space, let alias, let method, let filters) where space == nil && filters.count == 1:
+                guard case .field(let lKey, let fMethod, let fKey) = filters[0], case .equality(inverse: false) = fMethod else {
+                    throw FluentMongoError.unsupportedJoin
+                }
+                switch method {
+                case .left:
+                    stages.append(lookup(from: schema, localField: try lKey.makeProjectedMongoPath(), foreignField: try fKey.makeMongoPath(), as: alias ?? schema))
+                case .inner:
+                    stages.append(lookup(from: schema, localField: try lKey.makeProjectedMongoPath(), foreignField: try fKey.makeMongoPath(), as: alias ?? schema))
+                    stages.append(AggregateBuilderStage(document: ["$unwind": "$\(alias ?? schema)"]))
+                case .custom:
+                    throw FluentMongoError.unsupportedJoin
+                }
+            case .advancedJoin(_, _, _, _, _):
+                throw FluentMongoError.unsupportedJoin
             case .custom:
                 throw FluentMongoError.unsupportedJoin
             }
