@@ -97,7 +97,7 @@ extension DatabaseQuery {
                 case .custom:
                     throw FluentMongoError.unsupportedJoin
                 }
-            case .advancedJoin(let schema, let space, let alias, let method, let filters) where space == nil && filters.count == 1:
+            case .advancedJoin(let schema, nil, let alias, let method, let filters) where filters.count == 1:
                 guard case .field(let lKey, let fMethod, let fKey) = filters[0], case .equality(inverse: false) = fMethod else {
                     throw FluentMongoError.unsupportedJoin
                 }
