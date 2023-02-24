@@ -3,6 +3,7 @@ import NIO
 import FluentBenchmark
 import FluentMongoDriver
 import XCTest
+import MongoKitten
 
 final class DateRange: Model {
     static let schema = "date-range"
