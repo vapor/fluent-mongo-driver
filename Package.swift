@@ -20,6 +20,7 @@ let package = Package(
             dependencies: [
                 .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "MongoKitten", package: "MongoKitten"),
+                .product(name: "BSON", package: "BSON"),
             ]
         ),
         .testTarget(
