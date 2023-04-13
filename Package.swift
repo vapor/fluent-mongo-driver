@@ -1,10 +1,13 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.6
 import PackageDescription
 
 let package = Package(
     name: "fluent-mongo-driver",
     platforms: [
-       .macOS(.v10_15)
+        .macOS(.v10_15),
+        .iOS(.v13),
+        .watchOS(.v6),
+        .tvOS(.v13),
     ],
     products: [
         .library(name: "FluentMongoDriver", targets: ["FluentMongoDriver"]),
@@ -12,7 +15,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.37.0"),
         .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.6.4"),
-        .package(url: "https://github.com/OpenKitten/BSON.git", from: "7.0.30"),
     ],
     targets: [
         .target(
