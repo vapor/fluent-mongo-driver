@@ -48,7 +48,7 @@ jobs:
   api-breakage:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    container: swift:5.7-jammy
+    container: swift:5.8-jammy
     steps:
       - name: Check out package
         uses: actions/checkout@v3
@@ -68,9 +68,10 @@ jobs:
         dbimage:
           - mongo:6
         runner:
-          - swift:5.5-bionic
           - swift:5.6-focal
           - swift:5.7-jammy
+          - swift:5.8-jammy
+          - swiftlang/swift:nightly-5.9-jammy
           - swiftlang/swift:nightly-main-jammy
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
@@ -91,7 +92,7 @@ jobs:
       fail-fast: false
       matrix:
         dbimage: ['mongodb-community']
-        macos: ['macos-11', 'macos-12']
+        macos: ['macos-12']
         xcode: ['latest-stable']
     runs-on: ${{ matrix.macos }}
     env:
@@ -114,14 +115,3 @@ jobs:
         uses: actions/checkout@v3
       - name: Run all tests
         run: swift test --sanitize=thread
-
-  test-exports:
-    name: Test exports
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Build
-        run: swift build -Xswiftc -DBUILDING_DOCC
