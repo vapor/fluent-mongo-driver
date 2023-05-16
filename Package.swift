@@ -14,7 +14,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.37.0"),
-        .package(url: "https://github.com/OpenKitten/MongoKitten.git", from: "6.6.4"),
+        .package(url: "https://github.com/orlandos-nl/MongoKitten.git", from: "6.7.13"),
+        .package(url: "https://github.com/orlandos-nl/DNSClient.git", exact: "2.3.0"),
     ],
     targets: [
         .target(
@@ -22,6 +23,7 @@ let package = Package(
             dependencies: [
                 .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "MongoKitten", package: "MongoKitten"),
+                .product(name: "DNSClient", package: "DNSClient"),
             ]
         ),
         .testTarget(
