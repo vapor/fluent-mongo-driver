@@ -17,7 +17,7 @@ extension FluentMongoDatabase {
             var futures = [EventLoopFuture<Void>]()
 
             nextConstraint: for constraint in schema.createConstraints {
-                guard case .constraint(let algorithm, _) = constraint else {
+                guard case .constraint(let algorithm, let name) = constraint else {
                     continue nextConstraint
                 }
                 switch algorithm {
@@ -38,7 +38,7 @@ extension FluentMongoDatabase {
                     }
 
                     var index = CreateIndexes.Index(
-                        named: "unique",
+                        named: name ?? "unique",
                         keys: keys
                     )
 
