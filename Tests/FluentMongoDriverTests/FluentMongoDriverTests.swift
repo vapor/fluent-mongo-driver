@@ -146,6 +146,10 @@ final class FluentMongoDriverTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
+
+    func testDuplicateIndexNames() throws {
+        XCTAssertNoThrow(try DuplicateIndexMigration().prepare(on: self.db).wait())
+    }
     
     func testDate() throws {
         let range = DateRange(from: Date(), to: Date())
@@ -275,6 +279,22 @@ final class FluentMongoDriverTests: XCTestCase {
         try self.eventLoopGroup.syncShutdownGracefully()
         
         try super.tearDownWithError()
+    }
+}
+
+struct DuplicateIndexMigration: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database
+            .schema("index-tests")
+            .field("name", .string, .required)
+            .field("email", .string, .required)
+            .unique(on: "name", name: "name")
+            .unique(on: "email", name: "email")
+            .create()
+    }
+
+    func revert(on database: FluentKit.Database) -> NIOCore.EventLoopFuture<Void> {
+        database.schema("index-tests").delete()
     }
 }
 
