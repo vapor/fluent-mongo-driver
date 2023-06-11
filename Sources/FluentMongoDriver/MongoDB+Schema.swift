@@ -20,6 +20,15 @@ extension FluentMongoDatabase {
                 guard case .constraint(let algorithm, let name) = constraint else {
                     continue nextConstraint
                 }
+
+                let indexName: String
+                if let name = name, !name.isEmpty {
+                    indexName = name
+                } else {
+                    // this could be `composite` for the `.compositeIdentifier` case. But keeping it as `unique` keeps backwards compatibility
+                    indexName = "unique"
+                }
+
                 switch algorithm {
                 case .unique(let fields), .compositeIdentifier(let fields):
                     let indexKeys = try fields.map { field -> String in
@@ -38,7 +47,7 @@ extension FluentMongoDatabase {
                     }
 
                     var index = CreateIndexes.Index(
-                        named: name ?? "unique",
+                        named: indexName,
                         keys: keys
                     )
 

@@ -286,6 +286,7 @@ struct DuplicateIndexMigration: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database
             .schema("index-tests")
+            .id()
             .field("name", .string, .required)
             .field("email", .string, .required)
             .unique(on: "name", name: "name")
