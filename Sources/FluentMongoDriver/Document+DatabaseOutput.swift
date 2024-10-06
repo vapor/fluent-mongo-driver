@@ -1,5 +1,5 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 
 extension Document {
     internal func databaseOutput(using decoder: BSONDecoder) -> any DatabaseOutput {

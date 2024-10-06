@@ -1,5 +1,5 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 import MongoCore
 
 extension FluentMongoDatabase {

@@ -4,7 +4,7 @@ import MongoCore
 
 extension FluentMongoDatabase {
     @preconcurrency
-    func transaction<T>(_ closure: @Sendable @escaping (any Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
+    func transaction<T: Sendable>(_ closure: @Sendable @escaping (any Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
         guard !self.inTransaction else {
             return closure(self)
         }
