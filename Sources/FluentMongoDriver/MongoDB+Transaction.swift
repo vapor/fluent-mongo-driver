@@ -1,9 +1,10 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 import MongoCore
 
 extension FluentMongoDatabase {
-    func transaction<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
+    @preconcurrency
+    func transaction<T>(_ closure: @Sendable @escaping (any Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
         guard !self.inTransaction else {
             return closure(self)
         }

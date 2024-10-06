@@ -1,6 +1,6 @@
 import FluentKit
-import MongoKitten
-import MongoCore
+@preconcurrency import MongoKitten
+@preconcurrency import MongoCore
 
 extension DatabaseID {
     public static var mongo: DatabaseID {
@@ -14,9 +14,10 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
     let context: DatabaseContext
     let inTransaction: Bool
 
+    @preconcurrency
     func execute(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @Sendable @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         switch query.action {
         case .create:
@@ -40,13 +41,13 @@ struct FluentMongoDatabase: Database, MongoDatabaseRepresentable {
         self.raw.eventLoop.makeSucceededFuture(())
     }
 
-    func withConnection<T>(_ closure: @escaping (Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
+    func withConnection<T>(_ closure: @escaping (any Database) -> EventLoopFuture<T>) -> EventLoopFuture<T> {
         closure(self)
     }
 }
 
 struct FluentMongoDriver: DatabaseDriver {
-    func makeDatabase(with context: DatabaseContext) -> Database {
+    func makeDatabase(with context: DatabaseContext) -> any Database {
         FluentMongoDatabase(
             cluster: self.cluster,
             raw: self.cluster[self.targetDatabase].hopped(to: context.eventLoop),
@@ -70,9 +71,9 @@ public protocol MongoDatabaseRepresentable {
 struct FluentMongoConfiguration: DatabaseConfiguration {
     let settings: ConnectionSettings
     let targetDatabase: String
-    var middleware: [AnyModelMiddleware]
+    var middleware: [any AnyModelMiddleware]
 
-    func makeDriver(for databases: Databases) -> DatabaseDriver {
+    func makeDriver(for databases: Databases) -> any DatabaseDriver {
         do {
             let cluster = try MongoCluster(lazyConnectingTo: self.settings, on: databases.eventLoopGroup)
             return FluentMongoDriver(

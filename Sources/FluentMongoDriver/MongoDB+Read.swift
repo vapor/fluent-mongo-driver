@@ -3,9 +3,10 @@ import MongoKitten
 import MongoCore
 
 extension FluentMongoDatabase {
+    @preconcurrency
     func read(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @Sendable @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let condition = try query.makeMongoDBFilter(aggregate: false)

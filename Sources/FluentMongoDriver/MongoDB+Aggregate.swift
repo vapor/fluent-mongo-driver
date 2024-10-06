@@ -1,12 +1,13 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 import MongoCore
 
 extension FluentMongoDatabase {
+    @preconcurrency
     func aggregate(
         query: DatabaseQuery,
         aggregate: DatabaseQuery.Aggregate,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @Sendable @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         guard case .field(let field, let method) = aggregate else {
             return eventLoop.makeFailedFuture(FluentMongoError.unsupportedCustomAggregate)
@@ -52,7 +53,7 @@ extension FluentMongoDatabase {
     
     private func count(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @escaping @Sendable (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let condition = try query.makeMongoDBFilter(aggregate: false)
@@ -78,7 +79,7 @@ extension FluentMongoDatabase {
         query: DatabaseQuery,
         mongoOperator: String,
         field: DatabaseQuery.Field,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @escaping @Sendable (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let field = try field.makeMongoPath()

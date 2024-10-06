@@ -1,15 +1,15 @@
-import MongoKitten
+@preconcurrency import MongoKitten
 import FluentKit
 
 struct _MongoDBAggregateResponse: DatabaseOutput {
-    let value: Primitive
+    let value: any Primitive
     let decoder: BSONDecoder
     
     var description: String {
         "\(self.value)"
     }
 
-    func schema(_ schema: String) -> DatabaseOutput {
+    func schema(_ schema: String) -> any DatabaseOutput {
         self
     }
     

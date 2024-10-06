@@ -5,7 +5,7 @@ import MongoCore
 extension FluentMongoDatabase {
     func join(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
@@ -19,9 +19,10 @@ extension FluentMongoDatabase {
         }
     }
     
+    @preconcurrency
     func joinCount(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @Sendable @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let stages = try query.makeAggregatePipeline()
