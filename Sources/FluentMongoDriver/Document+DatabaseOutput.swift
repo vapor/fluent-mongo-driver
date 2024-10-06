@@ -1,8 +1,8 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 
 extension Document {
-    internal func databaseOutput(using decoder: BSONDecoder) -> DatabaseOutput {
+    internal func databaseOutput(using decoder: BSONDecoder) -> any DatabaseOutput {
         _FluentMongoOutput(document: self, decoder: decoder, schema: nil)
     }
 }
@@ -16,7 +16,7 @@ private struct _FluentMongoOutput: DatabaseOutput {
         self.document.debugDescription
     }
 
-    func schema(_ schema: String) -> DatabaseOutput {
+    func schema(_ schema: String) -> any DatabaseOutput {
         _FluentMongoOutput(document: self.document, decoder: self.decoder, schema: schema)
     }
 
@@ -41,7 +41,7 @@ private struct _FluentMongoOutput: DatabaseOutput {
         )
     }
 
-    private func primitive(_ key: FieldKey) -> Primitive? {
+    private func primitive(_ key: FieldKey) -> (any Primitive)? {
         if let schema = self.schema {
             let nested = self.document[schema] as! Document
             return nested[key.makeMongoKey()]

@@ -1,11 +1,12 @@
 import FluentKit
-import MongoKitten
+@preconcurrency import MongoKitten
 import MongoCore
 
 extension FluentMongoDatabase {
+    @preconcurrency
     func create(
         query: DatabaseQuery,
-        onOutput: @escaping (DatabaseOutput) -> ()
+        onOutput: @Sendable @escaping (any DatabaseOutput) -> ()
     ) -> EventLoopFuture<Void> {
         do {
             let documents = try query.makeValueDocuments()

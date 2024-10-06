@@ -1,4 +1,4 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.9
 import PackageDescription
 
 let package = Package(
@@ -13,7 +13,7 @@ let package = Package(
         .library(name: "FluentMongoDriver", targets: ["FluentMongoDriver"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.37.0"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.49.0"),
         .package(url: "https://github.com/orlandos-nl/MongoKitten.git", from: "6.7.13"),
         .package(url: "https://github.com/orlandos-nl/DNSClient.git", exact: "2.3.0"),
     ],
@@ -24,14 +24,24 @@ let package = Package(
                 .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "MongoKitten", package: "MongoKitten"),
                 .product(name: "DNSClient", package: "DNSClient"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "FluentMongoDriverTests",
             dependencies: [
                 .target(name: "FluentMongoDriver"),
                 .product(name: "FluentBenchmark", package: "fluent-kit"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
     ]
 )
+
+var swiftSettings: [SwiftSetting] { [
+    .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("ConciseMagicFile"),
+    .enableUpcomingFeature("ForwardTrailingClosures"),
+    .enableUpcomingFeature("DisableOutwardActorInference"),
+    .enableExperimentalFeature("StrictConcurrency=complete"),
+] }

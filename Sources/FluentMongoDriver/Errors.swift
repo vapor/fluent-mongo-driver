@@ -3,17 +3,26 @@ import MongoCore
 import FluentKit
 import Foundation
 
-extension MongoWriteError: DatabaseError {
+extension MongoWriteError {
     public var isSyntaxError: Bool { false }
     public var isConstraintFailure: Bool { false }
     public var isConnectionClosed: Bool { false }
 }
 
-extension MongoError: DatabaseError {
+// Used for DatabaseError
+extension MongoError {
     public var isSyntaxError: Bool { false }
     public var isConstraintFailure: Bool { false }
     public var isConnectionClosed: Bool { false }
 }
+
+#if compiler(<6)
+extension MongoWriteError: DatabaseError {}
+extension MongoError: DatabaseError {}
+#else
+extension MongoWriteError: @retroactive DatabaseError {}
+extension MongoError: @retroactive DatabaseError {}
+#endif
 
 public enum FluentMongoError: Error, DatabaseError {
     public var isSyntaxError: Bool { false }

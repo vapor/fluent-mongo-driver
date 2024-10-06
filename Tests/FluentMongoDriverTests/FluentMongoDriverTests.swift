@@ -1,11 +1,11 @@
 import Logging
 import NIO
 import FluentBenchmark
-import FluentMongoDriver
+@preconcurrency import FluentMongoDriver
 import XCTest
 import MongoKitten
 
-final class DateRange: Model {
+final class DateRange: @unchecked Sendable, Model {
     static let schema = "date-range"
     
     @ID(key: .id)
@@ -25,7 +25,7 @@ final class DateRange: Model {
     }
 }
 
-public final class Entity: Model {
+public final class Entity: @unchecked Sendable, Model {
     public static let schema = "entities"
     
     @ID(custom: .id)
@@ -42,7 +42,7 @@ public final class Entity: Model {
     }
 }
 
-public final class DocumentStorage: Model {
+public final class DocumentStorage: @unchecked Sendable, Model {
     public static let schema = "documentstorages"
     
     @ID(custom: .id)
@@ -59,7 +59,7 @@ public final class DocumentStorage: Model {
     }
 }
 
-public final class Nested: Fields {
+public final class Nested: @unchecked Sendable, Fields {
     @Field(key: "value")
     public var value: String
     
@@ -69,7 +69,7 @@ public final class Nested: Fields {
     }
 }
 
-public final class NestedStorage: Model {
+public final class NestedStorage: @unchecked Sendable, Model {
     public static let schema = "documentstorages"
     
     @ID(custom: .id)
@@ -227,14 +227,14 @@ final class FluentMongoDriverTests: XCTestCase {
     var benchmarker: FluentBenchmarker {
         return .init(databases: self.dbs)
     }
-    var eventLoopGroup: EventLoopGroup!
+    var eventLoopGroup: (any EventLoopGroup)!
     var threadPool: NIOThreadPool!
     var dbs: Databases!
-    var db: Database {
+    var db: any Database {
         self.benchmarker.database
     }
-    var mongodb: MongoDatabaseRepresentable {
-        db as! MongoDatabaseRepresentable
+    var mongodb: any MongoDatabaseRepresentable {
+        db as! (any MongoDatabaseRepresentable)
     }
     
     override func setUpWithError() throws {
@@ -263,9 +263,9 @@ final class FluentMongoDriverTests: XCTestCase {
         )), as: .b)
 
         // Drop existing tables.
-        let a = self.dbs.database(.a, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.any()) as! MongoDatabaseRepresentable
+        let a = self.dbs.database(.a, logger: Logger(label: "test.fluent.a"), on: self.eventLoopGroup.any()) as! (any MongoDatabaseRepresentable)
         try a.raw.drop().wait()
-        let b = self.dbs.database(.b, logger: Logger(label: "test.fluent.b"), on: self.eventLoopGroup.any()) as! MongoDatabaseRepresentable
+        let b = self.dbs.database(.b, logger: Logger(label: "test.fluent.b"), on: self.eventLoopGroup.any()) as! (any MongoDatabaseRepresentable)
         try b.raw.drop().wait()
     }
     

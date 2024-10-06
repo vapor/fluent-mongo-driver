@@ -2,7 +2,7 @@ import FluentKit
 import MongoKitten
 
 extension DatabaseQuery.Value {
-    func makePrimitive() throws -> Primitive {
+    func makePrimitive() throws -> any Primitive {
         switch self {
         case .array(let values):
             var array = Document(isArray: true)
@@ -24,7 +24,7 @@ extension DatabaseQuery.Value {
             return Null()
         case .default:
             throw FluentMongoError.unsupportedDefaultValue
-        case .custom(let primitive as Primitive):
+        case .custom(let primitive as any Primitive):
             return primitive
         case .enumCase(let string):
             return string
