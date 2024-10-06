@@ -60,7 +60,11 @@ struct FluentMongoDriver: DatabaseDriver {
     let targetDatabase: String
 
     func shutdown() {
-        self.cluster.disconnect()
+        try? self.cluster.disconnect().wait()
+    }
+    
+    func shutdownAsync() async {
+        try? await self.cluster.disconnect().get()
     }
 }
 
