@@ -2,17 +2,11 @@ import FluentKit
 import MongoKitten
 
 extension DatabaseQuery {
-    internal func makeMongoDBSort() throws -> MongoKitten.Sort? {
+    internal func makeMongoDBSort(aggregate: Bool) throws -> MongoKitten.Sort? {
         var sortSpec = [(String, SortOrder)]()
         
         for sort in sorts {
-            switch sort {
-            case .sort(let field, let direction):
-                let path = try field.makeMongoPath()
-                try sortSpec.append((path, direction.makeMongoDirection()))
-            case .custom:
-                throw FluentMongoError.unsupportedCustomSort
-            }
+            sortSpec.append(try sort.makeMongoDBSort(aggregate: aggregate))
         }
         
         if sortSpec.isEmpty {
